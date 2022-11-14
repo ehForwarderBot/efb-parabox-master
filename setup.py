@@ -39,4 +39,8 @@ setup(
         "cjkwrap",
         "typing-extensions>=3.7.4.1",
     ],
+    entry_points={
+        "ehforwarderbot.master": "ojhdt.parabox = efb_parabox_master:ParaboxChannel",
+        "ehforwarderbot.wizard": "ojhdt.parabox = efb_parabox_master.wizard:wizard"
+    }
 )
