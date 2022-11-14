@@ -21,7 +21,7 @@ from ehforwarderbot.status import ReactToMessage
 from ehforwarderbot.types import ModuleID, InstanceID, MessageID, ReactionName, ChatID
 from ruamel.yaml import YAML
 
-from slave_message import SlaveMessageProcessor
+from .slave_message import SlaveMessageProcessor
 from . import utils as epm_utils
 from .__version__ import __version__
 
