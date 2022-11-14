@@ -21,6 +21,7 @@ from ehforwarderbot.status import ReactToMessage
 from ehforwarderbot.types import ModuleID, InstanceID, MessageID, ReactionName, ChatID
 from ruamel.yaml import YAML
 
+from .server import ServerManager
 from .slave_message import SlaveMessageProcessor
 from . import utils as epm_utils
 from .__version__ import __version__
@@ -63,6 +64,8 @@ class ParaboxChannel(MasterChannel):
 
         # Initialize managers
         self.slave_messages: SlaveMessageProcessor = SlaveMessageProcessor(self)
+        self.master_messages: MasterMessageProcessor = MasterMessageProcessor(self)
+        self.server_manager: ServerManager = ServerManager(self)
 
         # Load predefined MIME types
         mimetypes.init(files=["mimetypes"])
@@ -83,11 +86,14 @@ class ParaboxChannel(MasterChannel):
         """
         Message polling process.
         """
+        self.server_manager.pulling()
 
     def send_status(self, status: 'Status'):
         pass
 
     def stop_polling(self):
+        self.logger.debug("Gracefully stopping %s (%s).", self.channel_name, self.channel_id)
+        self.server_manager.graceful_stop()
         pass
 
     def get_message_by_id(self, chat: Chat,

@@ -20,5 +20,6 @@ class SlaveMessageProcessor:
         self.channel = channel
         self.logger = logging.getLogger(__name__)
 
-    def send_message(self, msg):
+    def send_message(self, msg: Message) -> Message:
+
         pass
