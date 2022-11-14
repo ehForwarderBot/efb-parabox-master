@@ -1,0 +1,7 @@
+ehforwarderbot>=2.0.0
+requests
+pillow
+retrying
+bullet>=2.2.0
+cjkwrap
+typing-extensions>=3.7.4.1
