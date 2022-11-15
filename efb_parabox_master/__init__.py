@@ -21,6 +21,7 @@ from ehforwarderbot.status import ReactToMessage
 from ehforwarderbot.types import ModuleID, InstanceID, MessageID, ReactionName, ChatID
 from ruamel.yaml import YAML
 
+from .master_message import MasterMessageProcessor
 from .server import ServerManager
 from .slave_message import SlaveMessageProcessor
 from . import utils as epm_utils
@@ -89,7 +90,7 @@ class ParaboxChannel(MasterChannel):
         self.server_manager.pulling()
 
     def send_status(self, status: 'Status'):
-        pass
+        self.server_manager.send_status(self, status)
 
     def stop_polling(self):
         self.logger.debug("Gracefully stopping %s (%s).", self.channel_name, self.channel_id)

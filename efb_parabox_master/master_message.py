@@ -1,5 +1,7 @@
 import logging
-from typing import TYPE_CHECKING
+from queue import Queue
+from threading import Thread
+from typing import Optional, TYPE_CHECKING, Tuple, Any
 
 from ehforwarderbot import coordinator
 from ehforwarderbot.constants import MsgType
