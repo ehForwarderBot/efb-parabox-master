@@ -21,5 +21,5 @@ class SlaveMessageProcessor:
         self.logger = logging.getLogger(__name__)
 
     def send_message(self, msg: Message) -> Message:
-
-        pass
+        print(msg)
+        return msg

@@ -74,7 +74,7 @@ class ParaboxChannel(MasterChannel):
     def load_config(self):
         config_path = efb_utils.get_config_path(self.channel_id)
         if not config_path.exists():
-            raise FileNotFoundError(self._("Config File does not exist. ({path})").format(path=config_path))
+            raise FileNotFoundError("Config File does not exist. ({path})")
         with config_path.open() as f:
             data = YAML().load(f)
 
