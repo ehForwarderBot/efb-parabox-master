@@ -50,7 +50,6 @@ class ParaboxChannel(MasterChannel):
         super().__init__(instance_id)
 
         # Check PIL support for WebP
-        self.slave_messages = None
         Image.init()
         if 'WEBP' not in Image.ID or not getattr(WebPImagePlugin, "SUPPORTED", None):
             raise EFBException(self._("WebP support of Pillow is required.\n"

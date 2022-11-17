@@ -20,6 +20,8 @@ class MasterMessageProcessor:
     def __init__(self, channel: 'ParaboxChannel'):
         self.channel = channel
         self.logger = logging.getLogger(__name__)
+        self.logger.debug("MasterMessageProcessor initialized.")
 
     def send_message(self, msg: Message) -> Message:
+        self.logger.debug(msg)
         pass
