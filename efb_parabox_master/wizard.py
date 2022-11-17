@@ -33,7 +33,7 @@ class DataModel:
     def build_default_config(self):
         self.data = {
             "host": "127.0.0.1",
-            "port": "",
+            "port": "8000",
         }
 
         self.building_default = True
@@ -124,7 +124,7 @@ def input_port(data: DataModel, default=None):
 
 def setup_port(data):
     print_wrapped(
-        "1. Set up your Server Port\n"
+        "2. Set up your Server Port\n"
         "---------------------------\n"
         "EPM requires you to have a Telegram bot ready with you to start with."
     )
