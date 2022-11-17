@@ -15,3 +15,17 @@ if TYPE_CHECKING:
     from . import ParaboxChannel
 
 database = SqliteQueueDatabase(None, autostart=False)
+
+
+class DatabaseManager:
+    logger = logging.getLogger(__name__)
+    FAIL_FLAG = '__fail__'
+
+    def __init__(self, channel: 'ParaboxChannel'):
+        base_path = utils.get_data_path(channel.channel_id)
+
+        self.logger.debug("Loading database...")
+        database.init(str(base_path / 'pbdata.db'))
+        database.start()
+        database.connect()
+        self.logger.debug("Database loaded.")

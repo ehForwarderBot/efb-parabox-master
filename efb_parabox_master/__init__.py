@@ -20,7 +20,7 @@ from ehforwarderbot.exceptions import EFBException, EFBOperationNotSupported, EF
 from ehforwarderbot.status import ReactToMessage
 from ehforwarderbot.types import ModuleID, InstanceID, MessageID, ReactionName, ChatID
 from ruamel.yaml import YAML
-
+from .db import DatabaseManager
 from .master_message import MasterMessageProcessor
 from .server import ServerManager
 from .slave_message import SlaveMessageProcessor
@@ -63,6 +63,7 @@ class ParaboxChannel(MasterChannel):
         self.load_config()
 
         # Initialize managers
+        self.db: DatabaseManager = DatabaseManager(self)
         self.slave_messages: SlaveMessageProcessor = SlaveMessageProcessor(self)
         self.master_messages: MasterMessageProcessor = MasterMessageProcessor(self)
         self.server_manager: ServerManager = ServerManager(self)
