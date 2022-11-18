@@ -22,5 +22,13 @@ class SlaveMessageProcessor:
         self.logger.debug("SlaveMessageProcessor initialized.")
 
     def send_message(self, msg: Message) -> Message:
-        self.logger.debug(msg)
+        self.logger.debug(msg.chat)
+        self.logger.debug(msg.author)
+        self.logger.debug(msg.attributes)
+        self.logger.debug(msg.text)
+        self.logger.debug(msg.commands)
+        self.logger.debug(msg.deliver_to)
+        self.logger.debug(msg.path)
+        self.logger.debug(msg.type)
+        self.logger.debug(msg.mime)
         return msg
