@@ -1,11 +1,13 @@
 import logging
-from typing import TYPE_CHECKING, Optional, Tuple, Dict, Iterator
+from contextlib import suppress
+from typing import TYPE_CHECKING, Optional, Tuple, Dict, Iterator, overload, Literal
 
 from ehforwarderbot.chat import BaseChat
+from ehforwarderbot.exceptions import EFBChatNotFound
 from ehforwarderbot.types import ModuleID, ChatID
 
 from ehforwarderbot import coordinator, Chat
-from .chat import EPMChatType, convert_chat
+from .chat import EPMChatType, convert_chat, unpickle, EPMSystemChat
 
 if TYPE_CHECKING:
     from . import ParaboxChannel
@@ -64,6 +66,50 @@ class ChatObjectCacheManager:
         module_id = chat.module_id
         chat_id = chat.uid
         return module_id, chat_id
+
+    @overload
+    def get_chat(self, module_id: ModuleID, chat_id: ChatID, build_dummy: Literal[True]) -> EPMChatType:
+        ...
+
+    @overload
+    def get_chat(self, module_id: ModuleID, chat_id: ChatID, build_dummy: bool = False) -> Optional[EPMChatType]:
+        ...
+
+    def get_chat(self, module_id: ModuleID, chat_id: ChatID, build_dummy: bool = False) -> Optional[EPMChatType]:
+        """
+        Get an ETMChat object of a chat from cache.
+
+        If the object queried is not found, try to get from database cache,
+        then the relevant channel. If still not found, return None.
+
+        If build_dummy is set to True, this will return a dummy object with
+        the module_id, chat_id and group_id specified.
+        """
+        key = (module_id, chat_id)
+        if key in self.cache:
+            return self.cache[key]
+
+        c_log = self.db.get_slave_chat_info(module_id, chat_id)
+        if c_log is not None and c_log.pickle:
+            # Suppress AttributeError caused by change of class name in EFB 2.0.0b26, ETM 2.0.0b40
+            with suppress(AttributeError):
+                obj = unpickle(c_log.pickle, self.db)
+                self.enrol(obj)
+                return obj
+
+        # Only look up from slave channels as middlewares don’t have get_chat_by_id method.
+        if module_id in coordinator.slaves:
+            with suppress(EFBChatNotFound, KeyError):
+                chat_obj = coordinator.slaves[module_id].get_chat(chat_id)
+                return self.compound_enrol(chat_obj)
+
+        if build_dummy:
+            return EPMSystemChat(self.db,
+                                 module_id=module_id,
+                                 module_name=module_id,
+                                 uid=chat_id,
+                                 name=chat_id)
+        return None
 
     def delete_chat_object(self, module_id: ModuleID, chat_id: ChatID):
         """Remove chat object from cache."""

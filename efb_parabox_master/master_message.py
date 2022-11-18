@@ -22,6 +22,5 @@ class MasterMessageProcessor:
         self.logger = logging.getLogger(__name__)
         self.logger.debug("MasterMessageProcessor initialized.")
 
-    def send_message(self, msg: Message) -> Message:
-        self.logger.debug(msg)
+    def process_parabox_message(self):
         pass
