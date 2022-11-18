@@ -30,6 +30,5 @@ class ChatObjectCacheManager:
             self.logger.debug("Found %s chats from '%s'.", len(chats), channel_id)
             for chat in chats:
                 self.logger.debug("Loading chat %s from '%s'...", chat, channel_id)
-                self.logger.debug("Chat %s is a %s.", chat, type(chat))
                 # self.db.add_chat(chat)
             self.logger.debug("All %s chats from '%s' are enrolled.", len(chats), channel_id)

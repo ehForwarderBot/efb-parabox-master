@@ -21,7 +21,7 @@ class ServerManager:
     def graceful_stop(self):
         pass
 
-    def send_status(self, status: Status):
+    def send_status(self, status: 'Status'):
         if isinstance(status, ChatUpdates):
             self.logger.debug("Received chat updates from channel %s", status.channel)
             pass
