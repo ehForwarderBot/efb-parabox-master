@@ -84,10 +84,9 @@ class ServerManager:
                     self.logger.error("WebSocket client token incorrect: %s", websocket)
                     await websocket.send(1000)
                     self.websocket_users.remove(websocket)
-            except ConnectionTimeoutError as e:
+            except websockets.ConnectionClosed as e:
                 self.logger.error("WebSocket client token timeout: %s", websocket)
                 await websocket.send(1001)
-                self.websocket_users.remove(websocket)
 
 
     async def recv_user_msg(self, websocket):
