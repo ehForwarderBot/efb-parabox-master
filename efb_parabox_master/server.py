@@ -75,14 +75,16 @@ class ServerManager:
             recv_str = await websocket.recv()
             self.logger.log(recv_str)
             if recv_str == token:
-                response_str = "Congratulation, you have connect with server..."
-                await websocket.send(response_str)
+                self.logger.log("WebSocket client connected: %s", websocket)
+                await websocket.send(4000)
                 return True
             else:
-                response_str = "Sorry, please input token..."
-                await websocket.send(response_str)
+                self.logger.error("WebSocket client token incorrect: %s", websocket)
+                await websocket.send(1000)
+                self.websocket_users.remove(websocket)
 
     async def recv_user_msg(self, websocket):
+        self.logger.log("recv user msg...")
         while True:
             recv_text = await websocket.recv()
             self.logger.debug("recv_text: %s, %s", websocket.pong, recv_text)
