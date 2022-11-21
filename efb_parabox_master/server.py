@@ -51,7 +51,7 @@ class ServerManager:
 
             pass
         else:
-            self.logger.error('Received an unsupported type of status: %s', status)
+            self.logger.debug('Received an unsupported type of status: %s', status)
 
     async def handler(self, websocket, path):
         while True:
@@ -59,14 +59,14 @@ class ServerManager:
                 await self.check_user_permit(websocket)
                 await self.recv_user_msg(websocket)
             except websockets.ConnectionClosed:
-                self.logger.error("ConnectionClosed... %s", path)
+                self.logger.debug("ConnectionClosed... %s", path)
                 self.websocket_users.remove(websocket)
                 break
             except websockets.InvalidState:
-                self.logger.error("InvalidState...")
+                self.logger.debug("InvalidState...")
                 break
             except Exception as e:
-                self.logger.error("Exception: %s", e)
+                self.logger.debug("Exception: %s", e)
 
     async def check_user_permit(self, websocket):
         token = self.channel.config.get("token")
@@ -81,11 +81,11 @@ class ServerManager:
                     await websocket.send(4000)
                     return True
                 else:
-                    self.logger.error("WebSocket client token incorrect: %s", websocket)
+                    self.logger.debug("WebSocket client token incorrect: %s", websocket)
                     await websocket.send(1000)
                     self.websocket_users.remove(websocket)
             except websockets.ConnectionClosed as e:
-                self.logger.error("WebSocket client token timeout: %s", websocket)
+                self.logger.debug("WebSocket client token timeout: %s", websocket)
                 await websocket.send(1001)
 
 
