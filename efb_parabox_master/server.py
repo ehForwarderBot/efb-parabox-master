@@ -65,10 +65,11 @@ class ServerManager:
                 self.logger.error("Exception:", e)
 
     async def check_user_permit(self, websocket):
+        token = self.channel.config.get("token")
         while True:
             recv_str = await websocket.recv()
             self.logger.log(recv_str)
-            if recv_str == "123456":
+            if recv_str == token:
                 response_str = "Congratulation, you have connect with server..."
                 await websocket.send(response_str)
                 print("Password is ok...")

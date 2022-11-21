@@ -84,8 +84,10 @@ class ParaboxChannel(MasterChannel):
             # Verify configuration
             if not isinstance(data.get('host', None), str):
                 raise ValueError('Websocket server host must be a string')
-            if not isinstance(data.get('token', None), int):
-                raise ValueError('Websocket server port must be a string')
+            if not isinstance(data.get('port', None), int):
+                raise ValueError('Websocket server port must be a number')
+            if not isinstance(data.get('token', None), str):
+                raise ValueError('Websocket server token must be a string')
             self.config = data.copy()
 
     def send_message(self, msg: EFBMessage) -> EFBMessage:

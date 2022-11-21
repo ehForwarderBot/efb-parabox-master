@@ -2,6 +2,7 @@ import shutil
 from typing import Optional
 
 import cjkwrap
+import random
 from ehforwarderbot.types import ModuleID
 from ehforwarderbot import coordinator, utils
 from ehforwarderbot.wizard import DataModel
@@ -34,6 +35,7 @@ class DataModel:
         self.data = {
             "host": "localhost",
             "port": 8000,
+            "token": random.sample('zyxwvutsrqponmlkjihgfedcba', 10)
         }
 
         self.building_default = True
@@ -137,6 +139,37 @@ def setup_port(data):
         data.data['port'] = input_port(data)
 
 
+def input_token(data: DataModel, default=None):
+    prompt = "Your Token: "
+    if default:
+        prompt += f"[{default}] "
+    while True:
+        ans = input(prompt)
+        if not ans:
+            if default:
+                return default
+            else:
+                print("Connection token is required. Please try again.")
+                continue
+        else:
+            return ans
+
+
+def setup_token(data):
+    print_wrapped(
+        "3. Set up your Connection Token\n"
+        "---------------------------\n"
+        "EPM requires you to have a Telegram bot ready with you to start with."
+    )
+    print()
+    if data.data['token']:
+        # Config has token ready.
+        # Assuming user doesn't need help creating one
+        data.data['token'] = input_token(data, data.data['token'])
+    else:
+        data.data['token'] = input_token(data)
+
+
 def print_wrapped(text):
     paras = text.split("\n")
     for i in paras:
@@ -170,6 +203,7 @@ def wizard(profile, instance_id):
     print()
     setup_host(data)
     setup_port(data)
+    setup_token(data)
 
     print("Saving configurations...", end="", flush=True)
     data.save()
