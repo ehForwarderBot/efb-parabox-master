@@ -70,7 +70,7 @@ class ServerManager:
 
     async def check_user_permit(self, websocket):
         token = self.channel.config.get("token")
-        websocket_users.add(websocket)
+        self.websocket_users.add(websocket)
         while True:
             recv_str = await websocket.recv()
             self.logger.log(recv_str)
