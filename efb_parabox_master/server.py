@@ -75,7 +75,7 @@ class ServerManager:
             timeout = 10
             try:
                 recv_str = await asyncio.wait_for(websocket.recv(), timeout)
-                self.logger.log(recv_str)
+                self.logger.debug("recv_str: %s", recv_str)
                 if recv_str == token:
                     self.logger.log("WebSocket client connected: %s", websocket)
                     await websocket.send(4000)
