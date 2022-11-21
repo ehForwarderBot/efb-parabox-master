@@ -19,7 +19,7 @@ class ServerManager:
         self.channel: 'ParaboxChannel' = channel
         host = channel.config.get("host")
         port = channel.config.get("port")
-        self.logger.log(f"Websocket listening at ${host}:${port}")
+        self.logger.debug("Websocket listening at %s : %s", host, port)
         uri = f"ws://${host}:${port}"
 
         start_server = websockets.serve(self.handler, host, port)
@@ -56,13 +56,13 @@ class ServerManager:
                 await self.check_user_permit(websocket)
                 await self.recv_user_msg(websocket)
             except websockets.ConnectionClosed:
-                self.logger.error(f"ConnectionClosed... ${path}")
+                self.logger.error("ConnectionClosed... %s", path)
                 break
             except websockets.InvalidState:
                 self.logger.error("InvalidState...")
                 break
             except Exception as e:
-                self.logger.error("Exception:", e)
+                self.logger.error("Exception: %s", e)
 
     async def check_user_permit(self, websocket):
         token = self.channel.config.get("token")
@@ -82,6 +82,6 @@ class ServerManager:
     async def recv_user_msg(self, websocket):
         while True:
             recv_text = await websocket.recv()
+            self.logger.debug("recv_text: %s, %s", websocket.pong, recv_text)
             response_text = f"recv_text:${websocket.pong}, ${recv_text}"
-            self.logger.log(response_text)
             await websocket.send(response_text)
