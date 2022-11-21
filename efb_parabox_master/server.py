@@ -72,16 +72,23 @@ class ServerManager:
         token = self.channel.config.get("token")
         self.websocket_users.add(websocket)
         while True:
-            recv_str = await websocket.recv()
-            self.logger.log(recv_str)
-            if recv_str == token:
-                self.logger.log("WebSocket client connected: %s", websocket)
-                await websocket.send(4000)
-                return True
-            else:
-                self.logger.error("WebSocket client token incorrect: %s", websocket)
-                await websocket.send(1000)
+            timeout = 10
+            try:
+                recv_str = await asyncio.wait_for(websocket.recv(), timeout)
+                self.logger.log(recv_str)
+                if recv_str == token:
+                    self.logger.log("WebSocket client connected: %s", websocket)
+                    await websocket.send(4000)
+                    return True
+                else:
+                    self.logger.error("WebSocket client token incorrect: %s", websocket)
+                    await websocket.send(1000)
+                    self.websocket_users.remove(websocket)
+            except ConnectionTimeoutError as e:
+                self.logger.error("WebSocket client token timeout: %s", websocket)
+                await websocket.send(1001)
                 self.websocket_users.remove(websocket)
+
 
     async def recv_user_msg(self, websocket):
         self.logger.log("recv user msg...")
