@@ -22,7 +22,8 @@ class ServerManager:
         host = channel.config.get("host")
         port = channel.config.get("port")
         self.logger.debug("Websocket listening at %s : %s", host, port)
-        uri = f"ws://${host}:${port}"
+
+        self.websocket_users = set()
 
         start_server = websockets.serve(self.handler, host, port)
         asyncio.get_event_loop().run_until_complete(start_server)
@@ -59,6 +60,7 @@ class ServerManager:
                 await self.recv_user_msg(websocket)
             except websockets.ConnectionClosed:
                 self.logger.error("ConnectionClosed... %s", path)
+                self.websocket_users.remove(websocket)
                 break
             except websockets.InvalidState:
                 self.logger.error("InvalidState...")
@@ -68,17 +70,16 @@ class ServerManager:
 
     async def check_user_permit(self, websocket):
         token = self.channel.config.get("token")
+        websocket_users.add(websocket)
         while True:
             recv_str = await websocket.recv()
             self.logger.log(recv_str)
             if recv_str == token:
                 response_str = "Congratulation, you have connect with server..."
                 await websocket.send(response_str)
-                print("Password is ok...")
                 return True
             else:
                 response_str = "Sorry, please input token..."
-                print("Password is wrong...")
                 await websocket.send(response_str)
 
     async def recv_user_msg(self, websocket):

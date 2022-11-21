@@ -33,7 +33,7 @@ class DataModel:
 
     def build_default_config(self):
         self.data = {
-            "host": "localhost",
+            "host": "0.0.0.0",
             "port": 8000,
             "token": ''.join(random.sample(
                 ['z', 'y', 'x', 'w', 'v', 'u', 't', 's', 'r', 'q', 'p', 'o', 'n', 'm', 'l', 'k', 'j', 'i', 'h', 'g',
