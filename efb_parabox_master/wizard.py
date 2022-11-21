@@ -32,8 +32,8 @@ class DataModel:
 
     def build_default_config(self):
         self.data = {
-            "host": "127.0.0.1",
-            "port": "8000",
+            "host": "localhost",
+            "port": 8000,
         }
 
         self.building_default = True

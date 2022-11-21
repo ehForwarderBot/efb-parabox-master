@@ -30,5 +30,5 @@ class SlaveMessageProcessor:
         self.logger.debug(msg.deliver_to)
         self.logger.debug(msg.path)
         self.logger.debug(msg.type)
-        self.logger.debug(msg.vendor_specific)
+        self.logger.debug(msg.chat.uid)
         return msg

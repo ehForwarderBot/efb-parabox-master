@@ -81,6 +81,11 @@ class ParaboxChannel(MasterChannel):
         with config_path.open() as f:
             data = YAML().load(f)
 
+            # Verify configuration
+            if not isinstance(data.get('host', None), str):
+                raise ValueError('Websocket server host must be a string')
+            if not isinstance(data.get('token', None), int):
+                raise ValueError('Websocket server port must be a string')
             self.config = data.copy()
 
     def send_message(self, msg: EFBMessage) -> EFBMessage:
