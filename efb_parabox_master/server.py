@@ -7,6 +7,8 @@ from ehforwarderbot.status import ChatUpdates, MemberUpdates, MessageRemoval, Me
 
 import asyncio
 import websockets
+import nest_asyncio
+nest_asyncio.apply()
 
 if TYPE_CHECKING:
     from . import ParaboxChannel
