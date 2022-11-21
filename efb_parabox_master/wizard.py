@@ -35,7 +35,9 @@ class DataModel:
         self.data = {
             "host": "localhost",
             "port": 8000,
-            "token": random.sample('zyxwvutsrqponmlkjihgfedcba', 10)
+            "token": ''.join(random.sample(
+                ['z', 'y', 'x', 'w', 'v', 'u', 't', 's', 'r', 'q', 'p', 'o', 'n', 'm', 'l', 'k', 'j', 'i', 'h', 'g',
+                 'f', 'e', 'd', 'c', 'b', 'a'], 10))
         }
 
         self.building_default = True
@@ -68,6 +70,13 @@ class DataModel:
                 )
                 f.write("\n")
                 self.yaml.dump({"port": self.data['port']}, f)
+                f.write("\n")
+                f.write(
+                    "# [Connection Token]\n"
+                    "# The token used for verification.\n"
+                )
+                f.write("\n")
+                self.yaml.dump({"token": self.data['token']}, f)
                 f.write("\n")
             with self.config_path.open() as f:
                 self.data = self.yaml.load(f)
