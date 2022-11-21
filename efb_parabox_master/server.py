@@ -78,15 +78,15 @@ class ServerManager:
                 self.logger.debug("recv_str: %s", recv_str)
                 if recv_str == token:
                     self.logger.debug("WebSocket client connected: %s", websocket)
-                    await websocket.send(4000)
+                    await websocket.send("4000")
                     return True
                 else:
                     self.logger.debug("WebSocket client token incorrect: %s", websocket)
-                    await websocket.send(1000)
+                    await websocket.send("1000")
                     self.websocket_users.remove(websocket)
             except websockets.ConnectionClosed as e:
                 self.logger.debug("WebSocket client token timeout: %s", websocket)
-                await websocket.send(1001)
+                await websocket.send("1001")
 
 
     async def recv_user_msg(self, websocket):
