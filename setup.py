@@ -38,6 +38,7 @@ setup(
         "bullet>=2.2.0",
         "cjkwrap",
         "typing-extensions>=3.7.4.1",
+        "websockets~=10.4"
     ],
     entry_points={
         "ehforwarderbot.master": "ojhdt.parabox = efb_parabox_master:ParaboxChannel",
