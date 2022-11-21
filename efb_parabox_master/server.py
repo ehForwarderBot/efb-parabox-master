@@ -2,7 +2,6 @@ import itertools
 import logging
 from typing import TYPE_CHECKING
 
-import websocket
 from ehforwarderbot import Status
 from ehforwarderbot.status import ChatUpdates, MemberUpdates, MessageRemoval, MessageReactionsUpdate
 
@@ -79,7 +78,7 @@ class ServerManager:
                 print("Password is wrong...")
                 await websocket.send(response_str)
 
-    def recv_user_msg(self, websocket):
+    async def recv_user_msg(self, websocket):
         while True:
             recv_text = await websocket.recv()
             response_text = f"recv_text:${websocket.pong}, ${recv_text}"
