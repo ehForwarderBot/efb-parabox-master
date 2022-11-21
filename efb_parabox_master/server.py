@@ -33,7 +33,7 @@ class ServerManager:
         pass
 
     def graceful_stop(self):
-        self.logger.log("Websocket server stopped")
+        self.logger.debug("Websocket server stopped")
 
     def send_status(self, status: 'Status'):
         if isinstance(status, ChatUpdates):
@@ -77,7 +77,7 @@ class ServerManager:
                 recv_str = await asyncio.wait_for(websocket.recv(), timeout)
                 self.logger.debug("recv_str: %s", recv_str)
                 if recv_str == token:
-                    self.logger.log("WebSocket client connected: %s", websocket)
+                    self.logger.debug("WebSocket client connected: %s", websocket)
                     await websocket.send(4000)
                     return True
                 else:
@@ -90,7 +90,7 @@ class ServerManager:
 
 
     async def recv_user_msg(self, websocket):
-        self.logger.log("recv user msg...")
+        self.logger.debug("recv user msg...")
         while True:
             recv_text = await websocket.recv()
             self.logger.debug("recv_text: %s, %s", websocket.pong, recv_text)
