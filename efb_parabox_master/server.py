@@ -6,6 +6,7 @@ from ehforwarderbot import Status
 from ehforwarderbot.status import ChatUpdates, MemberUpdates, MessageRemoval, MessageReactionsUpdate
 
 import asyncio
+from asyncio.exceptions import TimeoutError
 import websockets
 import nest_asyncio
 nest_asyncio.apply()
@@ -66,7 +67,7 @@ class ServerManager:
                 self.logger.debug("InvalidState...")
                 break
             except Exception as e:
-                self.logger.debug("Exception: %s", e)
+                self.logger.debug("Exception Name: %s", type(e).__name__)
 
     async def check_user_permit(self, websocket):
         token = self.channel.config.get("token")
@@ -84,7 +85,7 @@ class ServerManager:
                     self.logger.debug("WebSocket client token incorrect: %s", websocket)
                     await websocket.send("1000")
                     self.websocket_users.remove(websocket)
-            except websockets.ConnectionClosed as e:
+            except TimeoutError as e:
                 self.logger.debug("WebSocket client token timeout: %s", websocket)
                 await websocket.send("1001")
 
