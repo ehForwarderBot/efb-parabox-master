@@ -81,6 +81,7 @@ class ServerManager:
                 break
             except Exception as e:
                 self.logger.debug("Exception Name: %s", type(e).__name__)
+                break
 
     async def check_user_permit(self, websocket):
         token = self.channel.config.get("token")
@@ -98,10 +99,12 @@ class ServerManager:
                     self.logger.debug("WebSocket client token incorrect: %s", websocket)
                     await websocket.send("1000")
                     self.websocket_users.remove(websocket)
+                    return False
             except TimeoutError as e:
                 self.logger.debug("WebSocket client token timeout: %s", websocket)
                 await websocket.send("1001")
                 self.websocket_users.remove(websocket)
+                return False
 
     async def recv_user_msg(self, websocket):
         self.logger.debug("recv user msg...")
