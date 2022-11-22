@@ -38,8 +38,9 @@ class ServerManager:
         self.loop.stop()
 
     async def send_message(self, json):
-        self.logger.debug("websocket_users: %s", self.websocket_users)
+        self.logger.debug("websocket_users: %s", len(self.websocket_users))
         for websocket in self.websocket_users:
+            self.logger.debug("sending ws to: %s", websocket)
             await websocket.send(json)
 
     def send_status(self, status: 'Status'):
