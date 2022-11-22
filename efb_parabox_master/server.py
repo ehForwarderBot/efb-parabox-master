@@ -101,6 +101,7 @@ class ServerManager:
             except TimeoutError as e:
                 self.logger.debug("WebSocket client token timeout: %s", websocket)
                 await websocket.send("1001")
+                self.websocket_users.remove(websocket)
 
     async def recv_user_msg(self, websocket):
         self.logger.debug("recv user msg...")
