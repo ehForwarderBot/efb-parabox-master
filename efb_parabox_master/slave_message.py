@@ -43,7 +43,8 @@ class SlaveMessageProcessor:
         # self.logger.debug(msg.deliver_to)
         # self.logger.debug(msg.path)
         # self.logger.debug(msg.type)
-        # self.logger.debug(msg.chat.uid)
+        self.logger.debug(msg.chat.uid)
+        self.logger.debug(msg.author.uid)
         # picture = coordinator.slaves[msg.].get_chat_picture(msg.chat)
         # if not picture:
         #     return msg
@@ -104,7 +105,7 @@ class SlaveMessageProcessor:
         else:
             return {
                 "type": 0,
-                "text": msg.text.encode('utf-8').decode("unicode_escape"),
+                "text": msg.text,
             }
 
     def get_chat_type(self, chat: Chat):
@@ -122,7 +123,7 @@ class SlaveMessageProcessor:
     def get_text_content_obj(self, msg):
         return {
             "type": 0,
-            "text": msg.text.encode('utf-8').decode("unicode_escape"),
+            "text": msg.text,
         }
 
     def get_image_content_obj(self, msg):

@@ -1,3 +1,5 @@
+# coding=utf-8
+
 import itertools
 import logging
 from typing import TYPE_CHECKING
