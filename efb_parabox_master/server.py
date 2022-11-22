@@ -27,15 +27,17 @@ class ServerManager:
 
         self.websocket_users = set()
 
+        self.loop = asyncio.new_event_loop()
         start_server = websockets.serve(self.handler, host, port)
-        asyncio.get_event_loop().run_until_complete(start_server)
-        asyncio.get_event_loop().run_forever()
+        self.loop.run_until_complete(start_server)
+        self.loop.run_forever()
 
     def pulling(self):
         pass
 
     def graceful_stop(self):
         self.logger.debug("Websocket server stopped")
+        self.loop.stop()
 
     def send_status(self, status: 'Status'):
         if isinstance(status, ChatUpdates):
