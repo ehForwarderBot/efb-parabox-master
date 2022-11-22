@@ -13,6 +13,7 @@ from ehforwarderbot.message import LinkAttribute, LocationAttribute, MessageComm
     StatusAttribute
 from ehforwarderbot.status import ChatUpdates, MemberUpdates, MessageRemoval, MessageReactionsUpdate
 from . import utils
+import asyncio
 from .utils import str2int
 
 if TYPE_CHECKING:
@@ -28,7 +29,7 @@ class SlaveMessageProcessor:
     def send_message(self, msg: Message) -> Message:
         json_str = self.build_json(msg)
         self.logger.debug(json_str)
-        self.channel.server_manager.send_message(json_str)
+        asyncio.get_event_loop().run_until_complete(self.channel.server_manager.send_message(json_str))
         # self.logger.debug(msg)
         # self.logger.debug(msg.chat)
         # self.logger.debug(msg.author)
