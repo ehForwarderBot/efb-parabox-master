@@ -76,7 +76,7 @@ class SlaveMessageProcessor:
             "messageId": str2int(msg.uid),
             "pluginConnection": {
                 "connectionType": 0,
-                "SendTargetType": self.get_chat_type(msg.chat),
+                "sendTargetType": self.get_chat_type(msg.chat),
                 "id": str2int(msg.chat.uid),
             }
         }
@@ -104,7 +104,7 @@ class SlaveMessageProcessor:
         else:
             return {
                 "type": 0,
-                "text": msg.text,
+                "text": msg.text.encode('utf-8').decode("unicode_escape"),
             }
 
     def get_chat_type(self, chat: Chat):
@@ -122,7 +122,7 @@ class SlaveMessageProcessor:
     def get_text_content_obj(self, msg):
         return {
             "type": 0,
-            "text": msg.text,
+            "text": msg.text.encode('utf-8').decode("unicode_escape"),
         }
 
     def get_image_content_obj(self, msg):
