@@ -9,6 +9,7 @@ import asyncio
 from asyncio.exceptions import TimeoutError
 import websockets
 import nest_asyncio
+
 nest_asyncio.apply()
 
 if TYPE_CHECKING:
@@ -89,7 +90,6 @@ class ServerManager:
                 self.logger.debug("WebSocket client token timeout: %s", websocket)
                 await websocket.send("1001")
 
-
     async def recv_user_msg(self, websocket):
         self.logger.debug("recv user msg...")
         while True:
@@ -97,3 +97,7 @@ class ServerManager:
             self.logger.debug("recv_text: %s, %s", websocket.pong, recv_text)
             response_text = f"recv_text:${websocket.pong}, ${recv_text}"
             await websocket.send(response_text)
+
+    async def send_message(self, json):
+        for websocket in self.websocket_users:
+            await websocket.send(json)
