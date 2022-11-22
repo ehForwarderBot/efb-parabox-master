@@ -87,6 +87,9 @@ class ServerManager:
     async def check_user_permit(self, websocket):
         token = self.channel.config.get("token")
         self.websocket_users.add(websocket)
+        self.logger.debug("websocket_users: %s", len(self.websocket_users))
+        for awebsocket in self.websocket_users:
+            self.logger.debug("ws user: %s", awebsocket)
         while True:
             timeout = 10
             try:
@@ -108,6 +111,9 @@ class ServerManager:
                 return False
 
     async def recv_user_msg(self, websocket):
+        self.logger.debug("websocket_users: %s", len(self.websocket_users))
+        for awebsocket in self.websocket_users:
+            self.logger.debug("ws user: %s", awebsocket)
         self.logger.debug("recv user msg...")
         while True:
             recv_text = await websocket.recv()
