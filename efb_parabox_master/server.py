@@ -76,20 +76,22 @@ class ServerManager:
             except websockets.ConnectionClosed:
                 self.logger.debug("ConnectionClosed... %s", path)
                 self.websocket_users.remove(websocket)
+                self.logger.debug("websocket_users: %s", len(self.websocket_users))
                 break
             except websockets.InvalidState:
                 self.logger.debug("InvalidState...")
+                self.logger.debug("websocket_users: %s", len(self.websocket_users))
                 break
             except Exception as e:
                 self.logger.debug("Exception Name: %s", type(e).__name__)
+                self.websocket_users.remove(websocket)
+                self.logger.debug("websocket_users: %s", len(self.websocket_users))
                 break
 
     async def check_user_permit(self, websocket):
         token = self.channel.config.get("token")
         self.websocket_users.add(websocket)
         self.logger.debug("websocket_users: %s", len(self.websocket_users))
-        for awebsocket in self.websocket_users:
-            self.logger.debug("ws user: %s", awebsocket)
         while True:
             timeout = 10
             try:
@@ -112,8 +114,6 @@ class ServerManager:
 
     async def recv_user_msg(self, websocket):
         self.logger.debug("websocket_users: %s", len(self.websocket_users))
-        for awebsocket in self.websocket_users:
-            self.logger.debug("ws user: %s", awebsocket)
         self.logger.debug("recv user msg...")
         while True:
             recv_text = await websocket.recv()
