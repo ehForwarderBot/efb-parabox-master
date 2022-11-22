@@ -1,6 +1,7 @@
 import itertools
 import logging
 from typing import TYPE_CHECKING
+import threading
 
 from ehforwarderbot import Status
 from ehforwarderbot.status import ChatUpdates, MemberUpdates, MessageRemoval, MessageReactionsUpdate
@@ -8,9 +9,9 @@ from ehforwarderbot.status import ChatUpdates, MemberUpdates, MessageRemoval, Me
 import asyncio
 from asyncio.exceptions import TimeoutError
 import websockets
-import nest_asyncio
-
-nest_asyncio.apply()
+# import nest_asyncio
+#
+# nest_asyncio.apply()
 
 if TYPE_CHECKING:
     from . import ParaboxChannel
@@ -21,16 +22,13 @@ class ServerManager:
     def __init__(self, channel: 'ParaboxChannel'):
         self.logger: logging.Logger = logging.getLogger(__name__)
         self.channel: 'ParaboxChannel' = channel
-        host = channel.config.get("host")
-        port = channel.config.get("port")
-        self.logger.debug("Websocket listening at %s : %s", host, port)
+        self.host = channel.config.get("host")
+        self.port = channel.config.get("port")
 
         self.websocket_users = set()
 
         self.loop = asyncio.new_event_loop()
-        start_server = websockets.serve(self.handler, host, port)
-        self.loop.run_until_complete(start_server)
-        self.loop.run_forever()
+        threading.Thread(target=self.run_server, daemon=True).start()
 
     def pulling(self):
         pass
@@ -38,6 +36,10 @@ class ServerManager:
     def graceful_stop(self):
         self.logger.debug("Websocket server stopped")
         self.loop.stop()
+
+    async def send_message(self, json):
+        for websocket in self.websocket_users:
+            await websocket.send(json)
 
     def send_status(self, status: 'Status'):
         if isinstance(status, ChatUpdates):
@@ -56,6 +58,13 @@ class ServerManager:
             pass
         else:
             self.logger.debug('Received an unsupported type of status: %s', status)
+
+    def run_server(self):
+        self.logger.debug("Websocket listening at %s : %s", self.host, self.port)
+        asyncio.set_event_loop(self.loop)
+        start_server = websockets.serve(self.handler, self.host, self.port)
+        self.loop.run_until_complete(start_server)
+        self.loop.run_forever()
 
     async def handler(self, websocket, path):
         while True:
@@ -99,7 +108,3 @@ class ServerManager:
             self.logger.debug("recv_text: %s, %s", websocket.pong, recv_text)
             response_text = f"recv_text:${websocket.pong}, ${recv_text}"
             await websocket.send(response_text)
-
-    async def send_message(self, json):
-        for websocket in self.websocket_users:
-            await websocket.send(json)
