@@ -14,6 +14,10 @@ from ehforwarderbot.message import LinkAttribute, LocationAttribute, MessageComm
 from ehforwarderbot.status import ChatUpdates, MemberUpdates, MessageRemoval, MessageReactionsUpdate
 from . import utils
 import asyncio
+import nest_asyncio
+
+nest_asyncio.apply()
+
 from .utils import str2int
 
 if TYPE_CHECKING:
