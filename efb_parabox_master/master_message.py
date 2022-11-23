@@ -30,13 +30,14 @@ class MasterMessageProcessor:
         """
         self.logger.debug(json_obj)
         if json_obj['type'] == 'message':
-            self.process_parabox_message_message(json_obj["data"])
+            self.process_parabox_message_message(json_obj['data'])
         elif json_obj['type'] == 'recall':
-            self.process_parabox_message_recall(json_obj["data"])
+            self.process_parabox_message_recall(json_obj['data'])
         else:
             self.logger.warning("Unknown message type: %s", json_obj['type'])
 
     def process_parabox_message_message(self, param):
+        self.logger.debug("Processing message: %s", param)
         chat_id = get_chat_id(param)
         self.logger.debug("Chat ID: %s", chat_id)
         chat = self.channel.chat_manager.get_chat(chat_id)
