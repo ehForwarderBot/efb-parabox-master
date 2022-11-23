@@ -31,8 +31,8 @@ class SlaveMessageProcessor:
         self.logger.debug("SlaveMessageProcessor initialized.")
 
     def send_message(self, msg: Message) -> Message:
-        slave_msg_id = msg.target.uid
-        slave_origin_uid = utils.chat_id_to_str(chat=msg.target.chat)
+        slave_msg_id = msg.uid
+        slave_origin_uid = utils.chat_id_to_str(chat=msg.chat)
         self.logger.debug("slave_msg_id: %s", slave_msg_id)
         self.logger.debug("slave_origin_uid: %s", slave_origin_uid)
 
