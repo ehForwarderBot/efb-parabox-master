@@ -161,12 +161,12 @@ class EPMPrivateChat(EPMChatMixin, PrivateChat):
 
     def __init__(self, db: 'DatabaseManager', *, channel: Optional[SlaveChannel] = None,
                  middleware: Optional[Middleware] = None,
-                 module_name: str = "", channel_emoji: str = "", module_id: ModuleID = ModuleID(""), name: str = "",
+                 module_name: str = "", channel_emoji: str = "", channel_id: str = "", module_id: ModuleID = ModuleID(""), name: str = "",
                  alias: Optional[str] = None, uid: ChatID = ChatID(""), vendor_specific: Dict[str, Any] = None,
                  description: str = "", notification: ChatNotificationState = ChatNotificationState.ALL,
                  with_self: bool = True, other_is_self: bool = False):
         super().__init__(db, channel=channel, middleware=middleware, module_name=module_name,
-                         channel_emoji=channel_emoji,
+                         channel_emoji=channel_emoji, channel_id=channel_id,
                          module_id=module_id, name=name, alias=alias, uid=uid, vendor_specific=vendor_specific,
                          description=description, notification=notification, with_self=with_self,
                          other_is_self=other_is_self)
@@ -178,12 +178,12 @@ class EPMSystemChat(EPMChatMixin, SystemChat):
 
     def __init__(self, db: 'DatabaseManager', *, channel: Optional[SlaveChannel] = None,
                  middleware: Optional[Middleware] = None,
-                 module_name: str = "", channel_emoji: str = "", module_id: ModuleID = ModuleID(""), name: str = "",
+                 module_name: str = "", channel_emoji: str = "", channel_id: str = "", module_id: ModuleID = ModuleID(""), name: str = "",
                  alias: Optional[str] = None, uid: ChatID = ChatID(""), vendor_specific: Dict[str, Any] = None,
                  description: str = "", notification: ChatNotificationState = ChatNotificationState.ALL,
                  with_self: bool = True):
         super().__init__(db, channel=channel, middleware=middleware, module_name=module_name,
-                         channel_emoji=channel_emoji,
+                         channel_emoji=channel_emoji, channel_id=channel_id,
                          module_id=module_id, name=name, alias=alias, uid=uid, vendor_specific=vendor_specific,
                          description=description, notification=notification, with_self=with_self)
 
@@ -194,12 +194,12 @@ class EPMGroupChat(EPMChatMixin, GroupChat):
 
     def __init__(self, db: 'DatabaseManager', *, channel: Optional[SlaveChannel] = None,
                  middleware: Optional[Middleware] = None,
-                 module_name: str = "", channel_emoji: str = "", module_id: ModuleID = ModuleID(""), name: str = "",
+                 module_name: str = "", channel_emoji: str = "", channel_id: str = "", module_id: ModuleID = ModuleID(""), name: str = "",
                  alias: Optional[str] = None, uid: ChatID = ChatID(""), vendor_specific: Dict[str, Any] = None,
                  description: str = "", notification: ChatNotificationState = ChatNotificationState.ALL,
                  with_self: bool = True):
         super().__init__(db, channel=channel, middleware=middleware, module_name=module_name,
-                         channel_emoji=channel_emoji,
+                         channel_emoji=channel_emoji, channel_id=channel_id,
                          module_id=module_id, name=name, alias=alias, uid=uid, vendor_specific=vendor_specific,
                          description=description, notification=notification, with_self=with_self)
 
@@ -208,7 +208,7 @@ EPMChatType = EPMChatMixin
 EPMBaseChatType = EPMBaseChatMixin
 
 
-def convert_chat(db: 'DatabaseManager', chat: Chat) -> EPMChatType:
+def convert_chat(db: 'DatabaseManager', chat: Chat, channel_id: str) -> EPMChatType:
     """Convert an EFB chat object to a EPM extended version.
 
     Raises:
@@ -218,7 +218,7 @@ def convert_chat(db: 'DatabaseManager', chat: Chat) -> EPMChatType:
         return chat
     etm_chat: EPMBaseChatType
     if isinstance(chat, PrivateChat):
-        etm_chat = EPMPrivateChat(db, module_id=chat.module_id, module_name=chat.module_name,
+        etm_chat = EPMPrivateChat(db, channel_id=channel_id, module_id=chat.module_id, module_name=chat.module_name,
                                   channel_emoji=chat.channel_emoji, name=chat.name, alias=chat.alias, uid=chat.uid,
                                   vendor_specific=chat.vendor_specific.copy(), description=chat.description,
                                   notification=chat.notification, with_self=chat.has_self,
@@ -226,14 +226,14 @@ def convert_chat(db: 'DatabaseManager', chat: Chat) -> EPMChatType:
         assert isinstance(etm_chat, EPMPrivateChat)  # for type check
         return etm_chat
     if isinstance(chat, SystemChat):
-        etm_chat = EPMSystemChat(db, module_id=chat.module_id, module_name=chat.module_name,
+        etm_chat = EPMSystemChat(db, channel_id=channel_id, module_id=chat.module_id, module_name=chat.module_name,
                                  channel_emoji=chat.channel_emoji, name=chat.name, alias=chat.alias, uid=chat.uid,
                                  vendor_specific=chat.vendor_specific.copy(), description=chat.description,
                                  notification=chat.notification, with_self=chat.has_self)
         assert isinstance(etm_chat, EPMSystemChat)  # for type check
         return etm_chat
     if isinstance(chat, GroupChat):
-        etm_chat = EPMGroupChat(db, module_id=chat.module_id, module_name=chat.module_name,
+        etm_chat = EPMGroupChat(db, channel_id=channel_id, module_id=chat.module_id, module_name=chat.module_name,
                                 channel_emoji=chat.channel_emoji, name=chat.name, alias=chat.alias, uid=chat.uid,
                                 vendor_specific=chat.vendor_specific.copy(), description=chat.description,
                                 notification=chat.notification, with_self=False)

@@ -41,13 +41,13 @@ class ChatObjectCacheManager:
                 continue
             self.logger.debug("Found %s chats from '%s'.", len(chats), channel_id)
             for chat in chats:
-                self.compound_enrol(chat)
+                self.compound_enrol(chat, channel_id)
             self.logger.debug("All %s chats from '%s' are enrolled.", len(chats), channel_id)
 
-    def compound_enrol(self, chat: Chat) -> EPMChatType:
+    def compound_enrol(self, chat: Chat, channel_id: str) -> EPMChatType:
         """Convert and enrol a chat object for the first time.
         """
-        epm_chat = convert_chat(self.db, chat)
+        epm_chat = convert_chat(self.db, chat, channel_id)
         self.enrol(epm_chat)
 
         return epm_chat
