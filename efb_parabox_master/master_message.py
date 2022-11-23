@@ -38,8 +38,11 @@ class MasterMessageProcessor:
 
     def process_parabox_message_message(self, param):
         chat_id = get_chat_id(param)
+        self.logger.debug("Chat ID: %s", chat_id)
         chat = self.channel.chat_manager.get_chat(chat_id)
-        cached_dest = self.chat_dest_cache.get(str(message.chat.id))
+        self.logger.debug("Chat: %s", chat)
+        self.logger.debug("module Id: %s", chat.module_id)
+
         m = EPMMsg()
 
     def process_parabox_message_recall(self, param):
