@@ -31,10 +31,6 @@ class SlaveMessageProcessor:
         self.logger.debug("SlaveMessageProcessor initialized.")
 
     def send_message(self, msg: Message) -> Message:
-        slave_msg_id = msg.uid
-        slave_origin_uid = utils.chat_id_to_str(chat=msg.chat)
-        self.logger.debug("slave_msg_id: %s", slave_msg_id)
-        self.logger.debug("slave_origin_uid: %s", slave_origin_uid)
 
         json_str = self.build_json(msg)
         self.logger.debug(json_str)
@@ -65,26 +61,22 @@ class SlaveMessageProcessor:
         return msg
 
     def build_json(self, msg: Message) -> str:
+        slave_msg_id = msg.uid
+        slave_origin_uid = utils.chat_id_to_str(chat=msg.chat)
         content_obj = self.get_content_obj(msg)
         json_obj = {
             "contents": [content_obj],
             "profile": {
                 "name": msg.author.name,
                 "avatar": None,
-                "id": str2int(msg.author.uid),
             },
             "subjectProfile": {
                 "name": msg.chat.name,
                 "avatar": None,
-                "id": str2int(msg.chat.uid),
             },
             "timestamp": int(round(time.time() * 1000)),
-            "messageId": str2int(msg.uid),
-            "pluginConnection": {
-                "connectionType": 0,
-                "sendTargetType": self.get_chat_type(msg.chat),
-                "id": str2int(msg.chat.uid),
-            }
+            "slaveOriginUid": slave_origin_uid,
+            "slaveMsgId": slave_msg_id,
         }
         return json.dumps(json_obj)
 
