@@ -75,6 +75,7 @@ class SlaveMessageProcessor:
                 "avatar": None,
             },
             "timestamp": int(round(time.time() * 1000)),
+            "chatType": self.get_chat_type(msg.chat),
             "slaveOriginUid": slave_origin_uid,
             "slaveMsgId": slave_msg_id,
         }
