@@ -37,12 +37,12 @@ class MasterMessageProcessor:
             self.logger.warning("Unknown message type: %s", json_obj['type'])
 
     def process_parabox_message_message(self, param):
-        self.logger.debug("Processing message: %s", param)
-        chat_id = get_chat_id(param)
-        self.logger.debug("Chat ID: %s", chat_id)
-        chat = self.channel.chat_manager.get_chat(chat_id)
-        self.logger.debug("Chat: %s", chat)
-        self.logger.debug("module Id: %s", chat.module_id)
+        # self.logger.debug("Processing message: %s", param)
+        # chat_id = get_chat_id(param)
+        # self.logger.debug("Chat ID: %s", chat_id)
+        # chat = self.channel.chat_manager.get_chat(module_id=,chat_id=chat_id)
+        # self.logger.debug("Chat: %s", chat)
+        # self.logger.debug("module Id: %s", chat.module_id)
 
         m = EPMMsg()
 
