@@ -92,7 +92,7 @@ class ServerManager:
                 self.logger.debug("websocket_users: %s", len(self.websocket_users))
                 break
             except Exception as e:
-                self.logger.debug("Exception Name: %s", type(e).__name__)
+                self.logger.debug("Exception Name: %s: %s", type(e).__name__, e)
                 self.websocket_users.remove(websocket)
                 self.logger.debug("websocket_users: %s", len(self.websocket_users))
                 break
@@ -157,4 +157,4 @@ class ServerManager:
             except JSONDecodeError as e:
                 self.logger.debug("JSONDecodeError: %s", e)
                 continue
-            
+
