@@ -15,9 +15,10 @@ def str2int(s: str) -> int:
 
 
 def get_chat_id(dto) -> str:
-    if dto.pluginConnection.sendTargetType == 0:
+    target_type = dto['pluginConnection']['sendTargetType']
+    if target_type == 0:
         return f"friend_${dto['pluginConnection']['id']}"
-    elif dto.pluginConnection.sendTargetType == 1:
+    elif target_type == 1:
         return f"group_${dto['pluginConnection']['id']}"
     else:
         return f"unknown_${dto['pluginConnection']['id']}"
