@@ -1,6 +1,7 @@
 # coding=utf-8
 
 import itertools
+import json
 import logging
 from typing import TYPE_CHECKING
 import threading
@@ -39,11 +40,16 @@ class ServerManager:
         self.logger.debug("Websocket server stopped")
         self.loop.stop()
 
-    async def send_message(self, json):
+    async def send_message(self, json_str):
         self.logger.debug("websocket_users: %s", len(self.websocket_users))
         for websocket in self.websocket_users:
             self.logger.debug("sending ws to: %s", websocket)
-            await websocket.send(json)
+            await websocket.send(
+                json.dumps({
+                    "type": "message",
+                    "data": json_str
+                })
+            )
 
     def send_status(self, status: 'Status'):
         if isinstance(status, ChatUpdates):
@@ -101,16 +107,40 @@ class ServerManager:
                 self.logger.debug("recv_str: %s", recv_str)
                 if recv_str == token:
                     self.logger.debug("WebSocket client connected: %s", websocket)
-                    await websocket.send("4000")
+                    await websocket.send(
+                        json.dumps({
+                            "type": "code",
+                            "data": {
+                                "code": 4000,
+                                "msg": "success"
+                            }
+                        })
+                    )
                     return True
                 else:
                     self.logger.debug("WebSocket client token incorrect: %s", websocket)
-                    await websocket.send("1000")
+                    await websocket.send(
+                        json.dumps({
+                            "type": "code",
+                            "data": {
+                                "code": 1000,
+                                "msg": "token incorrect"
+                            }
+                        })
+                    )
                     self.websocket_users.remove(websocket)
                     return False
             except TimeoutError as e:
                 self.logger.debug("WebSocket client token timeout: %s", websocket)
-                await websocket.send("1001")
+                await websocket.send(
+                    json.dumps({
+                        "type": "code",
+                        "data": {
+                            "code": 1001,
+                            "msg": "timeout"
+                        }
+                    })
+                )
                 self.websocket_users.remove(websocket)
                 return False
 
@@ -119,6 +149,6 @@ class ServerManager:
         self.logger.debug("recv user msg...")
         while True:
             recv_text = await websocket.recv()
-            self.logger.debug("recv_text: %s, %s", websocket.pong, recv_text)
-            response_text = f"recv_text:${websocket.pong}, ${recv_text}"
-            await websocket.send(response_text)
+            self.logger.debug("recv_text: %s", recv_text)
+            json_obj = json.loads(recv_text)
+            self.channel.master_messages.process_parabox_message(json_obj)

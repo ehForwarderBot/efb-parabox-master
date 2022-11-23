@@ -12,3 +12,12 @@ def str2int(s: str) -> int:
         if i.isdigit():
             r += i
     return int(r)
+
+
+def get_chat_id(dto) -> str:
+    if dto.pluginConnection.sendTargetType == 0:
+        return f"friend_${dto.pluginConnection.id}"
+    elif dto.pluginConnection.sendTargetType == 1:
+        return f"group_${dto.pluginConnection.id}"
+    else:
+        return f"unknown_${dto.pluginConnection.id}"
