@@ -149,12 +149,8 @@ class ServerManager:
         self.logger.debug("websocket_users: %s", len(self.websocket_users))
         self.logger.debug("recv user msg...")
         while True:
-            try:
-                recv_text = await websocket.recv()
-                self.logger.debug("recv_text: %s", recv_text)
-                json_obj = json.loads(recv_text)
-                self.channel.master_messages.process_parabox_message(json_obj)
-            except JSONDecodeError as e:
-                self.logger.debug("JSONDecodeError: %s", e)
-                continue
+            recv_text = await websocket.recv()
+            self.logger.debug("recv_text: %s", recv_text)
+            json_obj = json.loads(recv_text)
+            self.channel.master_messages.process_parabox_message(json_obj)
 
