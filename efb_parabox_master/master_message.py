@@ -51,7 +51,7 @@ class MasterMessageProcessor:
             self.logger.debug("[%s] EFB message type: %s", m.uid, m.type)
             # Chat and author related stuff
             m.chat = self.chat_manager.get_chat(channel, uid, build_dummy=True)
-            m.author = m.chat.self
+            # m.author = m.chat.self or m.chat.add_self()
 
             m.deliver_to = coordinator.slaves[channel]
 
