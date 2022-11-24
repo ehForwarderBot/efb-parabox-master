@@ -24,6 +24,16 @@ if TYPE_CHECKING:
     from . import ParaboxChannel
 
 
+def get_or_create_eventloop():
+    try:
+        return asyncio.get_event_loop()
+    except RuntimeError as ex:
+        if "There is no current event loop in thread" in str(ex):
+            loop = asyncio.new_event_loop()
+            asyncio.set_event_loop(loop)
+            return asyncio.get_event_loop()
+
+
 class SlaveMessageProcessor:
     def __init__(self, channel: 'ParaboxChannel'):
         self.channel = channel
@@ -34,7 +44,7 @@ class SlaveMessageProcessor:
 
         json_str = self.build_json(msg)
         self.logger.debug(json_str)
-        asyncio.get_event_loop().run_until_complete(self.channel.server_manager.send_message(json_str))
+        get_or_create_eventloop().run_until_complete(self.channel.server_manager.send_message(json_str))
         # self.logger.debug(msg)
         # self.logger.debug(msg.chat)
         # self.logger.debug(msg.author)
