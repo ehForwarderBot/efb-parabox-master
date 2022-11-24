@@ -4,6 +4,7 @@ from threading import Thread
 from typing import Optional, TYPE_CHECKING, Tuple, Any
 
 from ehforwarderbot import coordinator
+from ehforwarderbot.chat import SelfChatMember
 from ehforwarderbot.constants import MsgType
 from ehforwarderbot.exceptions import EFBMessageTypeNotSupported, EFBChatNotFound, \
     EFBMessageError, EFBOperationNotSupported, EFBException
@@ -51,7 +52,11 @@ class MasterMessageProcessor:
             self.logger.debug("[%s] EFB message type: %s", m.uid, m.type)
             # Chat and author related stuff
             m.chat = self.chat_manager.get_chat(channel, uid, build_dummy=True)
-            m.author = m.chat.add_self()
+            if m.chat.has_self:
+                m_author = SelfChatMember(m.chat)
+            else:
+                m_author = m.chat.add_self()
+            m.author = m_author
 
             m.deliver_to = coordinator.slaves[channel]
 
