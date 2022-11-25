@@ -92,7 +92,7 @@ class SlaveMessageProcessor:
             raise EFBOperationNotSupported()
 
         img_byte = base64.b64encode(picture.read())
-        img_str = img_byte.decode('utf-8')
+        img_str = img_byte.decode('ascii')
         self.logger.debug(img_str)
         return img_str
 
