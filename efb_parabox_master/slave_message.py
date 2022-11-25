@@ -93,6 +93,7 @@ class SlaveMessageProcessor:
 
         img_byte = base64.b64encode(picture.read())
         img_str = img_byte.decode('utf-8')
+        self.logger.debug(img_str)
         return img_str
 
     def get_content_obj(self, msg: Message) -> dict:
