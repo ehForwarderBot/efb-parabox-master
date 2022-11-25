@@ -64,10 +64,6 @@ class SlaveMessageProcessor:
         slave_msg_id = msg.uid
         slave_origin_uid = utils.chat_id_to_str(chat=msg.chat)
         channel, uid, gid = utils.chat_id_str_to_id(slave_origin_uid)
-        picture = coordinator.slaves[channel].get_chat_picture(msg.chat)
-        if not picture:
-            raise EFBOperationNotSupported()
-        self.logger.debug(picture)
 
         content_obj = self.get_content_obj(msg)
 
@@ -79,7 +75,7 @@ class SlaveMessageProcessor:
             },
             "subjectProfile": {
                 "name": msg.chat.name,
-                "avatar": None,
+                "avatar": self.get_chat_avatar_byte_str(msg),
             },
             "timestamp": int(round(time.time() * 1000)),
             "chatType": self.get_chat_type(msg.chat),
@@ -88,7 +84,7 @@ class SlaveMessageProcessor:
         }
         return json.dumps(json_obj)
 
-    def get_avatar_byte_str(self, msg: Message) -> str:
+    def get_chat_avatar_byte_str(self, msg: Message) -> str:
         slave_origin_uid = utils.chat_id_to_str(chat=msg.chat)
         channel, uid, gid = utils.chat_id_str_to_id(slave_origin_uid)
         picture = coordinator.slaves[channel].get_chat_picture(msg.chat)
