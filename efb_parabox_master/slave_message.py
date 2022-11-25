@@ -1,4 +1,5 @@
 # coding=utf-8
+import base64
 import io
 import logging
 import json
@@ -9,6 +10,7 @@ from PIL import Image
 from ehforwarderbot import Message, Status, coordinator
 from ehforwarderbot.chat import ChatNotificationState, SelfChatMember, GroupChat, PrivateChat, SystemChat, Chat
 from ehforwarderbot.constants import MsgType
+from ehforwarderbot.exceptions import EFBOperationNotSupported
 from ehforwarderbot.message import LinkAttribute, LocationAttribute, MessageCommand, Reactions, \
     StatusAttribute
 from ehforwarderbot.status import ChatUpdates, MemberUpdates, MessageRemoval, MessageReactionsUpdate
@@ -56,24 +58,15 @@ class SlaveMessageProcessor:
         # self.logger.debug(msg.type)
         self.logger.debug(msg.chat.uid)
         self.logger.debug(msg.author.uid)
-        # picture = coordinator.slaves[msg.].get_chat_picture(msg.chat)
-        # if not picture:
-        #     return msg
-        # pic_img = Image.open(picture)
-        # if pic_img.size[0] < 256 or pic_img.size[1] < 256:
-        #     # resize
-        #     scale = 256 / min(pic_img.size)
-        #     pic_resized = io.BytesIO()
-        #     pic_img.resize(tuple(map(lambda a: int(scale * a), pic_img.size)), Image.BICUBIC) \
-        #         .save(pic_resized, 'PNG')
-        #     pic_resized.seek(0)
-        # picture.seek(0)
         return msg
 
     def build_json(self, msg: Message) -> str:
         slave_msg_id = msg.uid
         slave_origin_uid = utils.chat_id_to_str(chat=msg.chat)
+        channel, uid, gid = utils.chat_id_str_to_id(slave_origin_uid)
+
         content_obj = self.get_content_obj(msg)
+
         json_obj = {
             "contents": [content_obj],
             "profile": {
@@ -82,7 +75,7 @@ class SlaveMessageProcessor:
             },
             "subjectProfile": {
                 "name": msg.chat.name,
-                "avatar": None,
+                "avatar": self.get_avatar_byte_str(msg),
             },
             "timestamp": int(round(time.time() * 1000)),
             "chatType": self.get_chat_type(msg.chat),
@@ -90,6 +83,17 @@ class SlaveMessageProcessor:
             "slaveMsgId": slave_msg_id,
         }
         return json.dumps(json_obj)
+
+    def get_avatar_byte_str(self, msg: Message) -> str:
+        slave_origin_uid = utils.chat_id_to_str(chat=msg.chat)
+        channel, uid, gid = utils.chat_id_str_to_id(slave_origin_uid)
+        picture = coordinator.slaves[channel].get_chat_picture(msg.chat)
+        if not picture:
+            raise EFBOperationNotSupported()
+
+        img_byte = base64.b64encode(picture.read())
+        img_str = img_byte.decode('utf-8')
+        return img_str
 
     def get_content_obj(self, msg: Message) -> dict:
         if msg.type == MsgType.Text:
