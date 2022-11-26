@@ -107,7 +107,7 @@ class SlaveMessageProcessor:
     def get_sender_avatar_bytes_str(self, msg: Message) -> bytes:
         slave_origin_uid = utils.chat_id_to_str(chat=msg.chat)
         channel, uid, gid = utils.chat_id_str_to_id(slave_origin_uid)
-        picture = coordinator.slaves[channel].get_msg_picture(msg)
+        picture = coordinator.slaves[channel].get_chat_member_picture(msg.author)
         if not picture:
             raise EFBOperationNotSupported()
         pic_img = Image.open(picture)
