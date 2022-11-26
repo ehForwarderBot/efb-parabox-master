@@ -90,8 +90,18 @@ class SlaveMessageProcessor:
         picture = coordinator.slaves[channel].get_chat_picture(msg.chat)
         if not picture:
             raise EFBOperationNotSupported()
+        pic_img = Image.open(picture)
 
-        img_bytes = base64.b64encode(picture.read())
+        # if pic_img.size[0] < 256 or \
+        #         pic_img.size[1] < 256:
+        # resize
+        scale = 256 / min(pic_img.size)
+        pic_resized = io.BytesIO()
+        pic_img.resize(tuple(map(lambda a: int(scale * a), pic_img.size)), Image.BICUBIC) \
+            .save(pic_resized, 'PNG')
+        pic_resized.seek(0)
+
+        img_bytes = base64.b64encode(pic_resized.read())
         return img_bytes
 
     def get_content_obj(self, msg: Message) -> dict:
