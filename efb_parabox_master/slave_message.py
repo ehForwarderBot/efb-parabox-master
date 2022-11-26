@@ -75,7 +75,7 @@ class SlaveMessageProcessor:
             },
             "subjectProfile": {
                 "name": msg.chat.name,
-                "avatar": self.get_chat_avatar_bytes(msg),
+                "avatar": self.get_chat_avatar_bytes_str(msg).decode('utf-8'),
             },
             "timestamp": int(round(time.time() * 1000)),
             "chatType": self.get_chat_type(msg.chat),
@@ -84,15 +84,15 @@ class SlaveMessageProcessor:
         }
         return json.dumps(json_obj)
 
-    def get_chat_avatar_bytes(self, msg: Message) -> bytes:
+    def get_chat_avatar_bytes_str(self, msg: Message) -> bytes:
         slave_origin_uid = utils.chat_id_to_str(chat=msg.chat)
         channel, uid, gid = utils.chat_id_str_to_id(slave_origin_uid)
         picture = coordinator.slaves[channel].get_chat_picture(msg.chat)
         if not picture:
             raise EFBOperationNotSupported()
 
-        img_byte = base64.b64encode(picture.read())
-        return img_byte
+        img_bytes = base64.b64encode(picture.read())
+        return img_bytes
 
     def get_content_obj(self, msg: Message) -> dict:
         if msg.type == MsgType.Text:
