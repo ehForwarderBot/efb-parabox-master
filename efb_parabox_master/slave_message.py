@@ -71,7 +71,7 @@ class SlaveMessageProcessor:
             "contents": [content_obj],
             "profile": {
                 "name": msg.author.name,
-                "avatar": None,
+                "avatar": self.get_sender_avatar_bytes_str(msg).decode('utf-8'),
             },
             "subjectProfile": {
                 "name": msg.chat.name,
@@ -88,6 +88,26 @@ class SlaveMessageProcessor:
         slave_origin_uid = utils.chat_id_to_str(chat=msg.chat)
         channel, uid, gid = utils.chat_id_str_to_id(slave_origin_uid)
         picture = coordinator.slaves[channel].get_chat_picture(msg.chat)
+        if not picture:
+            raise EFBOperationNotSupported()
+        pic_img = Image.open(picture)
+
+        # if pic_img.size[0] < 256 or \
+        #         pic_img.size[1] < 256:
+        # resize
+        scale = 256 / min(pic_img.size)
+        pic_resized = io.BytesIO()
+        pic_img.resize(tuple(map(lambda a: int(scale * a), pic_img.size)), Image.BICUBIC) \
+            .save(pic_resized, 'PNG')
+        pic_resized.seek(0)
+
+        img_bytes = base64.b64encode(pic_resized.read())
+        return img_bytes
+
+    def get_sender_avatar_bytes_str(self, msg: Message) -> bytes:
+        slave_origin_uid = utils.chat_id_to_str(chat=msg.chat)
+        channel, uid, gid = utils.chat_id_str_to_id(slave_origin_uid)
+        picture = coordinator.slaves[channel].get_msg_picture(msg)
         if not picture:
             raise EFBOperationNotSupported()
         pic_img = Image.open(picture)
