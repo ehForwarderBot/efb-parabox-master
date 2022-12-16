@@ -127,14 +127,14 @@ class SlaveMessageProcessor:
     def get_content_obj(self, msg: Message) -> dict:
         if msg.type == MsgType.Text:
             return self.get_text_content_obj(msg)
-        # elif msg.type == MsgType.Image:
-        #     return self.get_image_content_obj(msg)
-        # elif msg.type == MsgType.Voice:
-        #     return self.get_voice_content_obj(msg)
-        # elif msg.type == MsgType.Audio:
-        #     return self.get_audio_content_obj(msg)
-        # elif msg.type == MsgType.File:
-        #     return self.get_file_content_obj(msg)
+        elif msg.type == MsgType.Image:
+            return self.get_image_content_obj(msg)
+        elif msg.type == MsgType.Voice:
+            return self.get_voice_content_obj(msg)
+        elif msg.type == MsgType.Audio:
+            return self.get_audio_content_obj(msg)
+        elif msg.type == MsgType.File:
+            return self.get_file_content_obj(msg)
         # elif msg.type == MsgType.Sticker:
         #     return self.get_sticker_content_obj(msg)
         # elif msg.type == MsgType.Location:
@@ -168,18 +168,43 @@ class SlaveMessageProcessor:
         }
 
     def get_image_content_obj(self, msg):
+        file = msg.file
+        file.seek(0)
+        img_bytes = base64.b64encode(file.read())
         return {
             "type": 1,
+            "b64String": img_bytes.decode('utf-8'),
         }
 
     def get_voice_content_obj(self, msg):
-        pass
+        file = msg.file
+        file.seek(0)
+        voice_bytes = base64.b64encode(file.read())
+        return {
+            "type": 2,
+            "b64String": voice_bytes.decode('utf-8'),
+            "fileName": file.name,
+        }
 
     def get_audio_content_obj(self, msg):
-        pass
+        file = msg.file
+        file.seek(0)
+        audio_bytes = base64.b64encode(file.read())
+        return {
+            "type": 3,
+            "b64String": audio_bytes.decode('utf-8'),
+            "fileName": file.name,
+        }
 
     def get_file_content_obj(self, msg):
-        pass
+        file = msg.file
+        file.seek(0)
+        file_bytes = base64.b64encode(file.read())
+        return {
+            "type": 4,
+            "fileName": file.name,
+            "b64String": file_bytes.decode('utf-8'),
+        }
 
     def get_sticker_content_obj(self, msg):
         pass
