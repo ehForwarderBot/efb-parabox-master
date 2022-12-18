@@ -174,6 +174,7 @@ class SlaveMessageProcessor:
         return {
             "type": 1,
             "b64String": img_bytes.decode('utf-8'),
+            "fileName": file.name,
         }
 
     def get_voice_content_obj(self, msg):

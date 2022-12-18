@@ -1,11 +1,16 @@
+import base64
 import logging
+from io import BytesIO
 from queue import Queue
+from tempfile import NamedTemporaryFile
 from threading import Thread
 from typing import Optional, TYPE_CHECKING, Tuple, Any
 
+from PIL import Image
 from ehforwarderbot import coordinator
 from ehforwarderbot.chat import SelfChatMember
 from ehforwarderbot.constants import MsgType
+from ehforwarderbot import utils as efb_utils
 from ehforwarderbot.exceptions import EFBMessageTypeNotSupported, EFBChatNotFound, \
     EFBMessageError, EFBOperationNotSupported, EFBException
 from ehforwarderbot.message import LocationAttribute, Message
@@ -68,6 +73,41 @@ class MasterMessageProcessor:
 
             if mtype == 0:
                 m.text = param['content']['text']
+            elif mtype == 1:
+                data_path = efb_utils.get_data_path(self.channel.channel_id)
+                file_name = param['content']['fileName']
+                im_dir = data_path / "images"
+                if not im_dir.exists():
+                    im_dir.mkdir(parents=True)
+                im_path = f"{im_dir}/{file_name}"
+                b64_string = param['content']['b64String']
+                bytes_io = BytesIO(base64.b64decode(b64_string))
+                bytes_io.seek(0)
+
+                im = Image.open(bytes_io)
+                im.save(im_path)
+
+                file = NamedTemporaryFile()
+                file.name = im_path
+
+                m.file = file
+                m.filename = file_name
+                m.mime = "image/jpeg"
+            elif mtype == 2:
+                b64_string = param['content']['b64String']
+                voice = base64.b64decode(b64_string)
+                m.file = voice
+                m.filename = param['content']['fileName']
+            elif mtype == 3:
+                b64_string = param['content']['b64String']
+                audio = base64.b64decode(b64_string)
+                m.file = audio
+                m.filename = param['content']['fileName']
+            elif mtype == 4:
+                b64_string = param['content']['b64String']
+                file = base64.b64decode(b64_string)
+                m.file = file
+                m.filename = param['content']['fileName']
 
             slave_msg = coordinator.send_message(m)
             if slave_msg and slave_msg.uid:
@@ -97,14 +137,10 @@ def get_msg_type(msg_type: int) -> MsgType:
     elif msg_type == 1:
         return MsgType.Image
     elif msg_type == 2:
-        return MsgType.Text
+        return MsgType.Voice
     elif msg_type == 3:
         return MsgType.Audio
     elif msg_type == 4:
-        return MsgType.Text
-    elif msg_type == 5:
-        return MsgType.Text
-    elif msg_type == 6:
         return MsgType.File
     else:
         raise EFBMessageTypeNotSupported()
