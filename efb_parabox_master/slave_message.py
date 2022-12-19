@@ -135,6 +135,8 @@ class SlaveMessageProcessor:
             return self.get_audio_content_obj(msg)
         elif msg.type == MsgType.File:
             return self.get_file_content_obj(msg)
+        elif msg.type == MsgType.Animation:
+            return self.get_animation_content_obj(msg)
         # elif msg.type == MsgType.Sticker:
         #     return self.get_sticker_content_obj(msg)
         # elif msg.type == MsgType.Location:
@@ -174,7 +176,7 @@ class SlaveMessageProcessor:
         return {
             "type": 1,
             "b64String": img_bytes.decode('utf-8'),
-            "fileName": file.name,
+            "fileName": msg.filename,
         }
 
     def get_voice_content_obj(self, msg):
@@ -184,7 +186,7 @@ class SlaveMessageProcessor:
         return {
             "type": 2,
             "b64String": voice_bytes.decode('utf-8'),
-            "fileName": file.name,
+            "fileName": msg.filename,
         }
 
     def get_audio_content_obj(self, msg):
@@ -194,7 +196,7 @@ class SlaveMessageProcessor:
         return {
             "type": 3,
             "b64String": audio_bytes.decode('utf-8'),
-            "fileName": file.name,
+            "fileName": msg.filename,
         }
 
     def get_file_content_obj(self, msg):
@@ -203,7 +205,17 @@ class SlaveMessageProcessor:
         file_bytes = base64.b64encode(file.read())
         return {
             "type": 4,
-            "fileName": file.name,
+            "fileName": msg.filename,
+            "b64String": file_bytes.decode('utf-8'),
+        }
+
+    def get_animation_content_obj(self, msg):
+        file = msg.file
+        file.seek(0)
+        file_bytes = base64.b64encode(file.read())
+        return {
+            "type": 5,
+            "fileName": msg.filename,
             "b64String": file_bytes.decode('utf-8'),
         }
 
@@ -218,3 +230,4 @@ class SlaveMessageProcessor:
 
     def get_status_content_obj(self, msg):
         pass
+
