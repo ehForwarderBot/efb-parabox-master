@@ -1,11 +1,16 @@
+import base64
 import logging
+from io import BytesIO
 from queue import Queue
+from tempfile import NamedTemporaryFile
 from threading import Thread
 from typing import Optional, TYPE_CHECKING, Tuple, Any
 
+from PIL import Image
 from ehforwarderbot import coordinator
 from ehforwarderbot.chat import SelfChatMember
 from ehforwarderbot.constants import MsgType
+from ehforwarderbot import utils as efb_utils
 from ehforwarderbot.exceptions import EFBMessageTypeNotSupported, EFBChatNotFound, \
     EFBMessageError, EFBOperationNotSupported, EFBException
 from ehforwarderbot.message import LocationAttribute, Message
@@ -39,6 +44,7 @@ class MasterMessageProcessor:
             self.logger.warning("Unknown message type: %s", json_obj['type'])
 
     def process_parabox_message_message(self, param):
+        data_path = efb_utils.get_data_path(self.channel.channel_id)
         destination = param['slaveOriginUid']
         msg_id = param["slaveMsgId"]
         mtype = param['content']['type']
@@ -68,6 +74,100 @@ class MasterMessageProcessor:
 
             if mtype == 0:
                 m.text = param['content']['text']
+            elif mtype == 1:
+                file_name = param['content']['fileName']
+                im_dir = data_path / "images"
+                if not im_dir.exists():
+                    im_dir.mkdir(parents=True)
+                im_path = f"{im_dir}/{file_name}"
+                b64_string = param['content']['b64String']
+
+                # bytes_io = BytesIO(base64.b64decode(b64_string))
+                # bytes_io.seek(0)
+
+                with open(im_path, 'wb') as f:
+                    f.write(base64.b64decode(b64_string))
+                # im = Image.open(bytes_io)
+                # im.save(im_path)
+
+                file = NamedTemporaryFile()
+                file.name = im_path
+
+                m.file = file
+                m.filename = file_name
+                m.mime = "image/jpeg"
+            elif mtype == 2:
+                file_name = param['content']['fileName']
+                vo_dir = data_path / "audios"
+                if not vo_dir.exists():
+                    vo_dir.mkdir(parents=True)
+                vo_path = f"{vo_dir}/{file_name}"
+
+                b64_string = param['content']['b64String']
+
+                with open(vo_path, 'wb') as f:
+                    f.write(base64.b64decode(b64_string))
+
+                file = NamedTemporaryFile()
+                file.name = vo_path
+
+                m.file = file
+                m.filename = file_name
+                m.mime = "audio/mpeg"
+            elif mtype == 3:
+                file_name = param['content']['fileName']
+                au_dir = data_path / "audios"
+                if not au_dir.exists():
+                    au_dir.mkdir(parents=True)
+                au_path = f"{au_dir}/{file_name}"
+
+                b64_string = param['content']['b64String']
+
+                with open(au_path, 'wb') as f:
+                    f.write(base64.b64decode(b64_string))
+
+                file = NamedTemporaryFile()
+                file.name = au_path
+
+                m.file = file
+                m.filename = file_name
+                m.mime = "audio/mpeg"
+            elif mtype == 4:
+                file_name = param['content']['fileName']
+                fi_dir = data_path / "files"
+                if not fi_dir.exists():
+                    fi_dir.mkdir(parents=True)
+                fi_path = f"{fi_dir}/{file_name}"
+
+                b64_string = param['content']['b64String']
+
+                with open(fi_path, 'wb') as f:
+                    f.write(base64.b64decode(b64_string))
+
+                file = NamedTemporaryFile()
+                file.name = fi_path
+
+                m.file = file
+                m.filename = file_name
+                m.mime = "application/octet-stream"
+
+            elif mtype == 5:
+                file_name = param['content']['fileName']
+                im_dir = data_path / "images"
+                if not im_dir.exists():
+                    im_dir.mkdir(parents=True)
+                im_path = f"{im_dir}/{file_name}"
+                b64_string = param['content']['b64String']
+
+                with open(im_path, 'wb') as f:
+                    f.write(base64.b64decode(b64_string))
+
+                file = NamedTemporaryFile()
+                file.name = im_path
+
+                m.file = file
+                m.filename = file_name
+                m.mime = "image/gif"
 
             slave_msg = coordinator.send_message(m)
             if slave_msg and slave_msg.uid:
@@ -97,14 +197,10 @@ def get_msg_type(msg_type: int) -> MsgType:
     elif msg_type == 1:
         return MsgType.Image
     elif msg_type == 2:
-        return MsgType.Text
+        return MsgType.Voice
     elif msg_type == 3:
         return MsgType.Audio
     elif msg_type == 4:
-        return MsgType.Text
-    elif msg_type == 5:
-        return MsgType.Text
-    elif msg_type == 6:
         return MsgType.File
     else:
         raise EFBMessageTypeNotSupported()

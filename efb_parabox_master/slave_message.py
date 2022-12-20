@@ -1,4 +1,5 @@
 # coding=utf-8
+import base64
 import io
 import logging
 import json
@@ -9,6 +10,7 @@ from PIL import Image
 from ehforwarderbot import Message, Status, coordinator
 from ehforwarderbot.chat import ChatNotificationState, SelfChatMember, GroupChat, PrivateChat, SystemChat, Chat
 from ehforwarderbot.constants import MsgType
+from ehforwarderbot.exceptions import EFBOperationNotSupported
 from ehforwarderbot.message import LinkAttribute, LocationAttribute, MessageCommand, Reactions, \
     StatusAttribute
 from ehforwarderbot.status import ChatUpdates, MemberUpdates, MessageRemoval, MessageReactionsUpdate
@@ -24,6 +26,16 @@ if TYPE_CHECKING:
     from . import ParaboxChannel
 
 
+def get_or_create_eventloop():
+    try:
+        return asyncio.get_event_loop()
+    except RuntimeError as ex:
+        if "There is no current event loop in thread" in str(ex):
+            loop = asyncio.new_event_loop()
+            asyncio.set_event_loop(loop)
+            return asyncio.get_event_loop()
+
+
 class SlaveMessageProcessor:
     def __init__(self, channel: 'ParaboxChannel'):
         self.channel = channel
@@ -34,7 +46,7 @@ class SlaveMessageProcessor:
 
         json_str = self.build_json(msg)
         self.logger.debug(json_str)
-        asyncio.get_event_loop().run_until_complete(self.channel.server_manager.send_message(json_str))
+        get_or_create_eventloop().run_until_complete(self.channel.server_manager.send_message(json_str))
         # self.logger.debug(msg)
         # self.logger.debug(msg.chat)
         # self.logger.debug(msg.author)
@@ -46,33 +58,24 @@ class SlaveMessageProcessor:
         # self.logger.debug(msg.type)
         self.logger.debug(msg.chat.uid)
         self.logger.debug(msg.author.uid)
-        # picture = coordinator.slaves[msg.].get_chat_picture(msg.chat)
-        # if not picture:
-        #     return msg
-        # pic_img = Image.open(picture)
-        # if pic_img.size[0] < 256 or pic_img.size[1] < 256:
-        #     # resize
-        #     scale = 256 / min(pic_img.size)
-        #     pic_resized = io.BytesIO()
-        #     pic_img.resize(tuple(map(lambda a: int(scale * a), pic_img.size)), Image.BICUBIC) \
-        #         .save(pic_resized, 'PNG')
-        #     pic_resized.seek(0)
-        # picture.seek(0)
         return msg
 
     def build_json(self, msg: Message) -> str:
         slave_msg_id = msg.uid
         slave_origin_uid = utils.chat_id_to_str(chat=msg.chat)
+        channel, uid, gid = utils.chat_id_str_to_id(slave_origin_uid)
+
         content_obj = self.get_content_obj(msg)
+
         json_obj = {
             "contents": [content_obj],
             "profile": {
                 "name": msg.author.name,
-                "avatar": None,
+                "avatar": self.get_sender_avatar_bytes_str(msg).decode('utf-8'),
             },
             "subjectProfile": {
                 "name": msg.chat.name,
-                "avatar": None,
+                "avatar": self.get_chat_avatar_bytes_str(msg).decode('utf-8'),
             },
             "timestamp": int(round(time.time() * 1000)),
             "chatType": self.get_chat_type(msg.chat),
@@ -81,17 +84,59 @@ class SlaveMessageProcessor:
         }
         return json.dumps(json_obj)
 
+    def get_chat_avatar_bytes_str(self, msg: Message) -> bytes:
+        slave_origin_uid = utils.chat_id_to_str(chat=msg.chat)
+        channel, uid, gid = utils.chat_id_str_to_id(slave_origin_uid)
+        picture = coordinator.slaves[channel].get_chat_picture(msg.chat)
+        if not picture:
+            raise EFBOperationNotSupported()
+        pic_img = Image.open(picture)
+
+        # if pic_img.size[0] < 256 or \
+        #         pic_img.size[1] < 256:
+        # resize
+        scale = 256 / min(pic_img.size)
+        pic_resized = io.BytesIO()
+        pic_img.resize(tuple(map(lambda a: int(scale * a), pic_img.size)), Image.BICUBIC) \
+            .save(pic_resized, 'PNG')
+        pic_resized.seek(0)
+
+        img_bytes = base64.b64encode(pic_resized.read())
+        return img_bytes
+
+    def get_sender_avatar_bytes_str(self, msg: Message) -> bytes:
+        slave_origin_uid = utils.chat_id_to_str(chat=msg.chat)
+        channel, uid, gid = utils.chat_id_str_to_id(slave_origin_uid)
+        picture = coordinator.slaves[channel].get_chat_member_picture(msg.author)
+        if not picture:
+            raise EFBOperationNotSupported()
+        pic_img = Image.open(picture)
+
+        # if pic_img.size[0] < 256 or \
+        #         pic_img.size[1] < 256:
+        # resize
+        scale = 256 / min(pic_img.size)
+        pic_resized = io.BytesIO()
+        pic_img.resize(tuple(map(lambda a: int(scale * a), pic_img.size)), Image.BICUBIC) \
+            .save(pic_resized, 'PNG')
+        pic_resized.seek(0)
+
+        img_bytes = base64.b64encode(pic_resized.read())
+        return img_bytes
+
     def get_content_obj(self, msg: Message) -> dict:
         if msg.type == MsgType.Text:
             return self.get_text_content_obj(msg)
-        # elif msg.type == MsgType.Image:
-        #     return self.get_image_content_obj(msg)
-        # elif msg.type == MsgType.Voice:
-        #     return self.get_voice_content_obj(msg)
-        # elif msg.type == MsgType.Audio:
-        #     return self.get_audio_content_obj(msg)
-        # elif msg.type == MsgType.File:
-        #     return self.get_file_content_obj(msg)
+        elif msg.type == MsgType.Image:
+            return self.get_image_content_obj(msg)
+        elif msg.type == MsgType.Voice:
+            return self.get_voice_content_obj(msg)
+        elif msg.type == MsgType.Audio:
+            return self.get_audio_content_obj(msg)
+        elif msg.type == MsgType.File:
+            return self.get_file_content_obj(msg)
+        elif msg.type == MsgType.Animation:
+            return self.get_animation_content_obj(msg)
         # elif msg.type == MsgType.Sticker:
         #     return self.get_sticker_content_obj(msg)
         # elif msg.type == MsgType.Location:
@@ -125,18 +170,54 @@ class SlaveMessageProcessor:
         }
 
     def get_image_content_obj(self, msg):
+        file = msg.file
+        file.seek(0)
+        img_bytes = base64.b64encode(file.read())
         return {
             "type": 1,
+            "b64String": img_bytes.decode('utf-8'),
+            "fileName": msg.filename,
         }
 
     def get_voice_content_obj(self, msg):
-        pass
+        file = msg.file
+        file.seek(0)
+        voice_bytes = base64.b64encode(file.read())
+        return {
+            "type": 2,
+            "b64String": voice_bytes.decode('utf-8'),
+            "fileName": msg.filename,
+        }
 
     def get_audio_content_obj(self, msg):
-        pass
+        file = msg.file
+        file.seek(0)
+        audio_bytes = base64.b64encode(file.read())
+        return {
+            "type": 3,
+            "b64String": audio_bytes.decode('utf-8'),
+            "fileName": msg.filename,
+        }
 
     def get_file_content_obj(self, msg):
-        pass
+        file = msg.file
+        file.seek(0)
+        file_bytes = base64.b64encode(file.read())
+        return {
+            "type": 4,
+            "fileName": msg.filename,
+            "b64String": file_bytes.decode('utf-8'),
+        }
+
+    def get_animation_content_obj(self, msg):
+        file = msg.file
+        file.seek(0)
+        file_bytes = base64.b64encode(file.read())
+        return {
+            "type": 5,
+            "fileName": msg.filename,
+            "b64String": file_bytes.decode('utf-8'),
+        }
 
     def get_sticker_content_obj(self, msg):
         pass
@@ -149,3 +230,4 @@ class SlaveMessageProcessor:
 
     def get_status_content_obj(self, msg):
         pass
+

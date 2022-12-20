@@ -100,13 +100,9 @@ class ParaboxChannel(MasterChannel):
         self.server_manager.pulling()
 
     def send_status(self, status: 'Status'):
-        self.server_manager.send_status(self, status)
+        self.server_manager.send_status(status)
 
     def stop_polling(self):
         self.logger.debug("Gracefully stopping %s (%s).", self.channel_name, self.channel_id)
         self.server_manager.graceful_stop()
-        pass
-
-    def get_message_by_id(self, chat: Chat,
-                          msg_id: MessageID) -> Optional[EFBMessage]:
         pass
