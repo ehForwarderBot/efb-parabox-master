@@ -79,6 +79,8 @@ class MasterMessageProcessor:
                 file_name = param['content']['fileName']
                 f = tempfile.NamedTemporaryFile(suffix=".jpg")
                 f.write(base64.b64decode(param['content']['b64String']))
+                f.close()
+                f.seek(0)
                 m.file = f
                 m.filename = file_name
                 m.mime = "image/jpeg"
@@ -86,6 +88,8 @@ class MasterMessageProcessor:
                 file_name = param['content']['fileName']
                 f = tempfile.NamedTemporaryFile(suffix=".mp3")
                 f.write(base64.b64decode(param['content']['b64String']))
+                f.close()
+                f.seek(0)
                 m.file = f
                 m.filename = file_name
                 m.mime = "audio/mpeg"
@@ -93,6 +97,8 @@ class MasterMessageProcessor:
                 file_name = param['content']['fileName']
                 f = tempfile.NamedTemporaryFile(suffix=".mpeg")
                 f.write(base64.b64decode(param['content']['b64String']))
+                f.close()
+                f.seek(0)
                 m.file = f
                 m.filename = file_name
                 m.mime = "video/mpeg"
@@ -101,6 +107,8 @@ class MasterMessageProcessor:
                 f = tempfile.NamedTemporaryFile()
                 f.name = file_name
                 f.write(base64.b64decode(param['content']['b64String']))
+                f.close()
+                f.seek(0)
                 m.file = f
                 m.filename = file_name
                 m.mime = "application/octet-stream"
@@ -109,6 +117,8 @@ class MasterMessageProcessor:
                 file_name = param['content']['fileName']
                 f = tempfile.NamedTemporaryFile(suffix=".gif")
                 f.write(base64.b64decode(param['content']['b64String']))
+                f.close()
+                f.seek(0)
                 m.file = f
                 m.filename = file_name
                 m.mime = "image/gif"
