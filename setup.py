@@ -34,6 +34,7 @@ setup(
         "ehforwarderbot>=2.0.0",
         "requests",
         "pillow",
+        "peewee",
         "retrying",
         "bullet>=2.2.0",
         "cjkwrap",
