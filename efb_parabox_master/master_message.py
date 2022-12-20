@@ -114,7 +114,6 @@ class MasterMessageProcessor:
                 f = tempfile.NamedTemporaryFile(suffix=".gif")
                 f.write(base64.b64decode(param['content']['b64String']))
                 f.seek(0)
-                f.close()
                 m.file = f
                 m.filename = file_name
                 m.mime = "image/gif"
@@ -152,5 +151,7 @@ def get_msg_type(msg_type: int) -> MsgType:
         return MsgType.Audio
     elif msg_type == 4:
         return MsgType.File
+    elif msg_type == 5:
+        return MsgType.Animation
     else:
         raise EFBMessageTypeNotSupported()
