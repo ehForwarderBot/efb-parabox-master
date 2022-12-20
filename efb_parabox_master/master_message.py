@@ -81,17 +81,20 @@ class MasterMessageProcessor:
                     im_dir.mkdir(parents=True)
                 im_path = f"{im_dir}/{file_name}"
                 b64_string = param['content']['b64String']
+                im_content = base64.b64decode(b64_string)
 
                 # bytes_io = BytesIO(base64.b64decode(b64_string))
                 # bytes_io.seek(0)
 
                 with open(im_path, 'wb') as f:
-                    f.write(base64.b64decode(b64_string))
+                    f.write(im_content)
                 # im = Image.open(bytes_io)
                 # im.save(im_path)
 
                 file = NamedTemporaryFile()
                 file.name = im_path
+                file.write(im_content)
+                file.seek(0)
 
                 m.file = file
                 m.filename = file_name
@@ -104,12 +107,15 @@ class MasterMessageProcessor:
                 vo_path = f"{vo_dir}/{file_name}"
 
                 b64_string = param['content']['b64String']
+                vo_content = base64.b64decode(b64_string)
 
                 with open(vo_path, 'wb') as f:
-                    f.write(base64.b64decode(b64_string))
+                    f.write(vo_content)
 
                 file = NamedTemporaryFile()
                 file.name = vo_path
+                file.write(vo_content)
+                file.seek(0)
 
                 m.file = file
                 m.filename = file_name
@@ -122,12 +128,15 @@ class MasterMessageProcessor:
                 au_path = f"{au_dir}/{file_name}"
 
                 b64_string = param['content']['b64String']
+                au_content = base64.b64decode(b64_string)
 
                 with open(au_path, 'wb') as f:
-                    f.write(base64.b64decode(b64_string))
+                    f.write(au_content)
 
                 file = NamedTemporaryFile()
                 file.name = au_path
+                file.write(au_content)
+                file.seek(0)
 
                 m.file = file
                 m.filename = file_name
@@ -140,12 +149,15 @@ class MasterMessageProcessor:
                 fi_path = f"{fi_dir}/{file_name}"
 
                 b64_string = param['content']['b64String']
+                fi_content = base64.b64decode(b64_string)
 
                 with open(fi_path, 'wb') as f:
-                    f.write(base64.b64decode(b64_string))
+                    f.write(fi_content)
 
                 file = NamedTemporaryFile()
                 file.name = fi_path
+                file.write(fi_content)
+                file.seek(0)
 
                 m.file = file
                 m.filename = file_name
@@ -158,12 +170,15 @@ class MasterMessageProcessor:
                     im_dir.mkdir(parents=True)
                 im_path = f"{im_dir}/{file_name}"
                 b64_string = param['content']['b64String']
+                im_content = base64.b64decode(b64_string)
 
                 with open(im_path, 'wb') as f:
-                    f.write(base64.b64decode(b64_string))
+                    f.write(im_content)
 
                 file = NamedTemporaryFile()
                 file.name = im_path
+                file.write(im_content)
+                file.seek(0)
 
                 m.file = file
                 m.filename = file_name

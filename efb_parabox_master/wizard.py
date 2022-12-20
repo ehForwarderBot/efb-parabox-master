@@ -16,7 +16,7 @@ class DataModel:
     building_default = False
 
     def __init__(self, profile: str, instance_id: str):
-        print("==== etm_wizard, data mod, init", profile)
+        print("==== epm_wizard, data mod, init", profile)
         coordinator.profile = profile
         self.profile = profile
         self.instance_id = instance_id
@@ -58,7 +58,7 @@ class DataModel:
                     "# --------------\n"
                     "#\n"
                     "# [Server Host]\n"
-                    "# By default the 127.0.0.1 is used which allows connections only from the current machine. If "
+                    "# 127.0.0.1 is used which allows connections only from the current machine. If "
                     "you wish to allow all network machines to connect, you need to pass 0.0.0.0 as hostname.\n "
                 )
                 f.write("\n")
@@ -130,7 +130,7 @@ def input_port(data: DataModel, default=None):
                 print("Server port is required. Please try again.")
                 continue
         else:
-            return ans
+            return int(ans)
 
 
 def setup_port(data):
