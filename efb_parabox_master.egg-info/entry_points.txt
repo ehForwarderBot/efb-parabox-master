@@ -1,0 +1,5 @@
+[ehforwarderbot.master]
+ojhdt.parabox = efb_parabox_master:ParaboxChannel
+
+[ehforwarderbot.wizard]
+ojhdt.parabox = efb_parabox_master.wizard:wizard

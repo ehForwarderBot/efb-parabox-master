@@ -18,7 +18,6 @@ setup(
     python_requires='>=3.6',
     keywords=['ehforwarderbot', 'EH Forwarder Bot', 'EH Forwarder Bot Master Channel', 'Parabox'],
     classifiers=[
-        "Development Status :: 1 - Alpha",
         "License :: OSI Approved :: GNU Affero General Public License v3 or later (AGPLv3+)",
         "Intended Audience :: Developers",
         "Intended Audience :: End Users/Desktop",
