@@ -41,6 +41,7 @@ class ServerManager:
 
         self.host = channel.config.get("host")
         self.port = channel.config.get("port")
+        self.sending_interval = channel.config.get("sending_interval")
 
         self.websocket_users = set()
 
@@ -59,11 +60,10 @@ class ServerManager:
         while True:
             msg_json = self.db.take_msg_json()
             if msg_json is not None:
-                self.logger.debug("############ get 1 message to send , tried %s times ############", msg_json.tried)
+                self.logger.info("Get 1 message to send , tried %s times", msg_json.tried)
                 await self.send_message(msg_json.json)
-            else:
-                self.logger.debug("############ nothing to send ############")
-            await asyncio.sleep(3)
+
+            await asyncio.sleep(self.sending_interval)
 
     async def send_message(self, json_str):
         self.logger.debug("websocket_users: %s", len(self.websocket_users))
@@ -95,7 +95,7 @@ class ServerManager:
             self.logger.debug('Received an unsupported type of status: %s', status)
 
     def run_server(self):
-        self.logger.debug("Websocket listening at %s : %s", self.host, self.port)
+        self.logger.info("Websocket listening at %s : %s", self.host, self.port)
         asyncio.set_event_loop(self.loop)
         start_server = websockets.serve(self.handler, self.host, self.port)
         cors = asyncio.wait([start_server, self.msg_looper()])
@@ -133,7 +133,7 @@ class ServerManager:
                 recv_str = await asyncio.wait_for(websocket.recv(), timeout)
                 self.logger.debug("recv_str: %s", recv_str)
                 if recv_str == token:
-                    self.logger.debug("WebSocket client connected: %s", websocket)
+                    self.logger.info("WebSocket client connected: %s", websocket)
                     await websocket.send(
                         json.dumps({
                             "type": "code",
@@ -145,7 +145,7 @@ class ServerManager:
                     )
                     return True
                 else:
-                    self.logger.debug("WebSocket client token incorrect: %s", websocket)
+                    self.logger.info("WebSocket client token incorrect: %s", websocket)
                     await websocket.send(
                         json.dumps({
                             "type": "code",
@@ -158,7 +158,7 @@ class ServerManager:
                     self.websocket_users.remove(websocket)
                     return False
             except TimeoutError as e:
-                self.logger.debug("WebSocket client token timeout: %s", websocket)
+                self.logger.info("WebSocket client token timeout: %s", websocket)
                 await websocket.send(
                     json.dumps({
                         "type": "code",

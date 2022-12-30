@@ -33,6 +33,7 @@ class SlaveMessageProcessor:
         self.db: 'DatabaseManager' = channel.db
         self.logger = logging.getLogger(__name__)
         self.logger.debug("SlaveMessageProcessor initialized.")
+        self.compatibility_mode = channel.config.get("compatibility_mode")
 
     def send_message(self, msg: Message) -> Message:
 
@@ -54,11 +55,11 @@ class SlaveMessageProcessor:
             "contents": [content_obj],
             "profile": {
                 "name": msg.author.name,
-                "avatar": self.get_sender_avatar_bytes_str(msg).decode('utf-8'),
+                "avatar": self.get_sender_avatar_bytes_str(msg),
             },
             "subjectProfile": {
                 "name": msg.chat.name,
-                "avatar": self.get_chat_avatar_bytes_str(msg).decode('utf-8'),
+                "avatar": self.get_chat_avatar_bytes_str(msg),
             },
             "timestamp": int(round(time.time() * 1000)),
             "chatType": self.get_chat_type(msg.chat),
@@ -67,7 +68,7 @@ class SlaveMessageProcessor:
         }
         return json.dumps(json_obj)
 
-    def get_chat_avatar_bytes_str(self, msg: Message) -> bytes:
+    def get_chat_avatar_bytes_str(self, msg: Message) -> str:
         slave_origin_uid = utils.chat_id_to_str(chat=msg.chat)
         channel, uid, gid = utils.chat_id_str_to_id(slave_origin_uid)
         picture = coordinator.slaves[channel].get_chat_picture(msg.chat)
@@ -85,27 +86,30 @@ class SlaveMessageProcessor:
         pic_resized.seek(0)
 
         img_bytes = base64.b64encode(pic_resized.read())
-        return img_bytes
+        return img_bytes.decode('utf-8')
 
-    def get_sender_avatar_bytes_str(self, msg: Message) -> bytes:
-        slave_origin_uid = utils.chat_id_to_str(chat=msg.chat)
-        channel, uid, gid = utils.chat_id_str_to_id(slave_origin_uid)
-        picture = coordinator.slaves[channel].get_chat_member_picture(msg.author)
-        if not picture:
-            raise EFBOperationNotSupported()
-        pic_img = Image.open(picture)
+    def get_sender_avatar_bytes_str(self, msg: Message) -> str:
+        if self.compatibility_mode:
+            return ""
+        else:
+            slave_origin_uid = utils.chat_id_to_str(chat=msg.chat)
+            channel, uid, gid = utils.chat_id_str_to_id(slave_origin_uid)
+            picture = coordinator.slaves[channel].get_chat_member_picture(msg.author)
+            if not picture:
+                raise EFBOperationNotSupported()
+            pic_img = Image.open(picture)
 
-        # if pic_img.size[0] < 256 or \
-        #         pic_img.size[1] < 256:
-        # resize
-        scale = 256 / min(pic_img.size)
-        pic_resized = io.BytesIO()
-        pic_img.resize(tuple(map(lambda a: int(scale * a), pic_img.size)), Image.BICUBIC) \
-            .save(pic_resized, 'PNG')
-        pic_resized.seek(0)
+            # if pic_img.size[0] < 256 or \
+            #         pic_img.size[1] < 256:
+            # resize
+            scale = 256 / min(pic_img.size)
+            pic_resized = io.BytesIO()
+            pic_img.resize(tuple(map(lambda a: int(scale * a), pic_img.size)), Image.BICUBIC) \
+                .save(pic_resized, 'PNG')
+            pic_resized.seek(0)
 
-        img_bytes = base64.b64encode(pic_resized.read())
-        return img_bytes
+            img_bytes = base64.b64encode(pic_resized.read())
+            return img_bytes.decode('utf-8')
 
     def get_content_obj(self, msg: Message) -> dict:
         if msg.type == MsgType.Text:
