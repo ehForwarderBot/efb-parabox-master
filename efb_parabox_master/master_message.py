@@ -23,11 +23,13 @@ from .utils import get_chat_id
 
 if TYPE_CHECKING:
     from . import ParaboxChannel
+    from .db import DatabaseManager
 
 
 class MasterMessageProcessor:
     def __init__(self, channel: 'ParaboxChannel'):
         self.channel = channel
+        self.db: 'DatabaseManager' = channel.db
         self.logger = logging.getLogger(__name__)
         self.logger.debug("MasterMessageProcessor initialized.")
         self.chat_manager: ChatObjectCacheManager = channel.chat_manager
@@ -41,6 +43,10 @@ class MasterMessageProcessor:
             self.process_parabox_message_message(json_obj['data'])
         elif json_obj['type'] == 'recall':
             self.process_parabox_message_recall(json_obj['data'])
+        elif json_obj['type'] == 'response':
+            self.db.resort_msg_json(json_obj['data'])
+        elif json_obj['type'] == 'refresh':
+            self.db.refresh_msg_json()
         else:
             self.logger.warning("Unknown message type: %s", json_obj['type'])
 

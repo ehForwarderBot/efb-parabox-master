@@ -13,25 +13,39 @@ from ehforwarderbot.status import ChatUpdates, MemberUpdates, MessageRemoval, Me
 import asyncio
 from asyncio.exceptions import TimeoutError
 import websockets
+
 # import nest_asyncio
 #
 # nest_asyncio.apply()
 
 if TYPE_CHECKING:
     from . import ParaboxChannel
+    from .db import DatabaseManager
+
+
+def get_or_create_eventloop():
+    try:
+        return asyncio.get_event_loop()
+    except RuntimeError as ex:
+        if "There is no current event loop in thread" in str(ex):
+            loop = asyncio.new_event_loop()
+            asyncio.set_event_loop(loop)
+            return asyncio.get_event_loop()
 
 
 class ServerManager:
-
     def __init__(self, channel: 'ParaboxChannel'):
         self.logger: logging.Logger = logging.getLogger(__name__)
         self.channel: 'ParaboxChannel' = channel
+        self.db: 'DatabaseManager' = channel.db
+
         self.host = channel.config.get("host")
         self.port = channel.config.get("port")
 
         self.websocket_users = set()
 
-        self.loop = asyncio.new_event_loop()
+        self.loop = get_or_create_eventloop()
+        # self.run_server()
         threading.Thread(target=self.run_server, daemon=True).start()
 
     def pulling(self):
@@ -40,6 +54,16 @@ class ServerManager:
     def graceful_stop(self):
         self.logger.debug("Websocket server stopped")
         self.loop.stop()
+
+    async def msg_looper(self):
+        while True:
+            msg_json = self.db.take_msg_json()
+            if msg_json is not None:
+                self.logger.debug("############ get 1 message to send , tried %s times ############", msg_json.tried)
+                await self.send_message(msg_json.json)
+            else:
+                self.logger.debug("############ nothing to send ############")
+            await asyncio.sleep(3)
 
     async def send_message(self, json_str):
         self.logger.debug("websocket_users: %s", len(self.websocket_users))
@@ -74,8 +98,10 @@ class ServerManager:
         self.logger.debug("Websocket listening at %s : %s", self.host, self.port)
         asyncio.set_event_loop(self.loop)
         start_server = websockets.serve(self.handler, self.host, self.port)
-        self.loop.run_until_complete(start_server)
-        self.loop.run_forever()
+        cors = asyncio.wait([start_server, self.msg_looper()])
+        self.loop.run_until_complete(cors)
+        # self.loop.run_until_complete(start_server)
+        # self.loop.run_forever()
 
     async def handler(self, websocket, path):
         while True:
@@ -150,7 +176,6 @@ class ServerManager:
         self.logger.debug("recv user msg...")
         while True:
             recv_text = await websocket.recv()
-            self.logger.debug("recv_text: %s", recv_text)
+            # self.logger.debug("recv_text: %s", recv_text)
             json_obj = json.loads(recv_text)
             self.channel.master_messages.process_parabox_message(json_obj)
-

@@ -60,6 +60,8 @@ class ParaboxChannel(MasterChannel):
 
         # Set up logger
         self.logger: logging.Logger = logging.getLogger(__name__)
+        # logger = logging.getLogger('peewee')
+        # logger.setLevel(logging.WARNING)
 
         # Load configs
         self.load_config()

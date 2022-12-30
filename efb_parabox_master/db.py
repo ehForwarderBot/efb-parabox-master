@@ -3,7 +3,7 @@
 import logging
 from typing import TYPE_CHECKING, Optional
 
-from peewee import TextField, CharField, BlobField, Model, DoesNotExist
+from peewee import TextField, CharField, BlobField, Model, DoesNotExist, BooleanField, IntegerField
 from playhouse.sqliteq import SqliteQueueDatabase
 from playhouse.migrate import SqliteMigrator, migrate
 
@@ -34,6 +34,12 @@ class SlaveChatInfo(BaseModel):
     pickle = BlobField(null=True)
 
 
+class MsgJson(BaseModel):
+    uid = TextField(unique=True, primary_key=True)
+    json = TextField()
+    tried = IntegerField()
+
+
 class DatabaseManager:
     logger = logging.getLogger(__name__)
     FAIL_FLAG = '__fail__'
@@ -47,6 +53,10 @@ class DatabaseManager:
         database.connect()
         self.logger.debug("Database loaded.")
 
+        self.logger.debug("Checking database migration...")
+        if not MsgJson.table_exists():
+            self._create()
+
     def stop_worker(self):
         database.stop()
 
@@ -55,7 +65,52 @@ class DatabaseManager:
         """
         Initializing tables.
         """
-        database.create_tables([SlaveChatInfo])
+        database.create_tables([SlaveChatInfo, MsgJson])
+
+    @staticmethod
+    def refresh_msg_json():
+        query = MsgJson.update(tried=0)
+        query.execute()
+
+    @staticmethod
+    def get_msg_json(uid) -> Optional[MsgJson]:
+        try:
+            return MsgJson.select() \
+                .where(MsgJson.uid == uid).first()
+        except DoesNotExist:
+            return None
+
+    def set_msg_json(self, uid, json) -> Optional[MsgJson]:
+        msg_json = self.get_msg_json(uid)
+        if msg_json is not None:
+            msg_json.json = json
+            msg_json.save()
+            return msg_json
+        else:
+            return MsgJson.create(uid=uid,
+                                  json=json,
+                                  tried=0)
+
+    @staticmethod
+    def take_msg_json() -> Optional[MsgJson]:
+        try:
+            msg_json: MsgJson = MsgJson.select() \
+                .where(MsgJson.tried < 4) \
+                .order_by(MsgJson.tried) \
+                .first()
+            if msg_json is not None:
+                msg_json.tried = msg_json.tried + 1
+                msg_json.save()
+                return msg_json
+            else:
+                return None
+        except DoesNotExist:
+            return None
+
+    @staticmethod
+    def resort_msg_json(uid):
+        return MsgJson.delete() \
+            .where(MsgJson.uid == uid).execute()
 
     @staticmethod
     def get_slave_chat_info(slave_channel_id: Optional[ModuleID] = None,

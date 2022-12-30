@@ -24,40 +24,23 @@ from .utils import str2int
 
 if TYPE_CHECKING:
     from . import ParaboxChannel
-
-
-def get_or_create_eventloop():
-    try:
-        return asyncio.get_event_loop()
-    except RuntimeError as ex:
-        if "There is no current event loop in thread" in str(ex):
-            loop = asyncio.new_event_loop()
-            asyncio.set_event_loop(loop)
-            return asyncio.get_event_loop()
+    from .db import DatabaseManager
 
 
 class SlaveMessageProcessor:
     def __init__(self, channel: 'ParaboxChannel'):
         self.channel = channel
+        self.db: 'DatabaseManager' = channel.db
         self.logger = logging.getLogger(__name__)
         self.logger.debug("SlaveMessageProcessor initialized.")
 
     def send_message(self, msg: Message) -> Message:
 
         json_str = self.build_json(msg)
-        # self.logger.debug(json_str)
-        get_or_create_eventloop().run_until_complete(self.channel.server_manager.send_message(json_str))
-        # self.logger.debug(msg)
-        # self.logger.debug(msg.chat)
-        # self.logger.debug(msg.author)
-        # self.logger.debug(msg.attributes)
-        # self.logger.debug(msg.text)
-        # self.logger.debug(msg.commands)
-        # self.logger.debug(msg.deliver_to)
-        # self.logger.debug(msg.path)
-        # self.logger.debug(msg.type)
-        self.logger.debug(msg.chat.uid)
-        self.logger.debug(msg.author.uid)
+        self.db.set_msg_json(uid=msg.uid, json=json_str)
+        # get_or_create_eventloop().run_until_complete(self.channel.server_manager.send_message(json_str))
+        # self.logger.debug(msg.chat.uid)
+        # self.logger.debug(msg.author.uid)
         return msg
 
     def build_json(self, msg: Message) -> str:
@@ -137,6 +120,8 @@ class SlaveMessageProcessor:
             return self.get_file_content_obj(msg)
         elif msg.type == MsgType.Animation:
             return self.get_animation_content_obj(msg)
+        elif msg.type == MsgType.Video:
+            return self.get_video_content_obj(msg)
         # elif msg.type == MsgType.Sticker:
         #     return self.get_sticker_content_obj(msg)
         # elif msg.type == MsgType.Location:
@@ -218,6 +203,9 @@ class SlaveMessageProcessor:
             "fileName": msg.filename,
             "b64String": file_bytes.decode('utf-8'),
         }
+
+    def get_video_content_obj(self, msg):
+        pass
 
     def get_sticker_content_obj(self, msg):
         pass
