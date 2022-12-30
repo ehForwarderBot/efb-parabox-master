@@ -3,6 +3,7 @@
 import itertools
 import json
 import logging
+import time
 from json import JSONDecodeError
 from typing import TYPE_CHECKING
 import threading
@@ -23,14 +24,14 @@ if TYPE_CHECKING:
     from .db import DatabaseManager
 
 
-def get_or_create_eventloop():
-    try:
-        return asyncio.get_event_loop()
-    except RuntimeError as ex:
-        if "There is no current event loop in thread" in str(ex):
-            loop = asyncio.new_event_loop()
-            asyncio.set_event_loop(loop)
-            return asyncio.get_event_loop()
+# def get_or_create_eventloop():
+#     try:
+#         return asyncio.get_event_loop()
+#     except RuntimeError as ex:
+#         if "There is no current event loop in thread" in str(ex):
+#             loop = asyncio.new_event_loop()
+#             asyncio.set_event_loop(loop)
+#             return asyncio.get_event_loop()
 
 
 class ServerManager:
@@ -45,19 +46,24 @@ class ServerManager:
 
         self.websocket_users = set()
 
-        self.loop = get_or_create_eventloop()
-        # self.run_server()
-        threading.Thread(target=self.run_server, daemon=True).start()
+        # run self.run_main in another thread
+        self.thread = threading.Thread(target=self.run_main)
+        self.thread.start()
 
     def pulling(self):
         pass
 
     def graceful_stop(self):
         self.logger.debug("Websocket server stopped")
-        self.loop.stop()
 
     async def msg_looper(self):
         while True:
+            # check self.websocket_users empty
+            if len(self.websocket_users) == 0:
+                self.logger.debug("no websocket user, sleep 1s")
+                await asyncio.sleep(1)
+                continue
+
             msg_json = self.db.take_msg_json()
             if msg_json is not None:
                 self.logger.info("Get 1 message to send , tried %s times", msg_json.tried)
@@ -96,12 +102,26 @@ class ServerManager:
 
     def run_server(self):
         self.logger.info("Websocket listening at %s : %s", self.host, self.port)
-        asyncio.set_event_loop(self.loop)
-        start_server = websockets.serve(self.handler, self.host, self.port)
-        cors = asyncio.wait([start_server, self.msg_looper()])
-        self.loop.run_until_complete(cors)
-        # self.loop.run_until_complete(start_server)
-        # self.loop.run_forever()
+        loop = asyncio.new_event_loop()
+        # asyncio.set_event_loop(loop)
+        # server = websockets.serve(self.handler, self.host, self.port)
+        asyncio.run_coroutine_threadsafe(self.server_main(), loop)
+        # asyncio.run(self.server_main())
+
+    async def server_main(self):
+        async with websockets.serve(self.handler, self.host, self.port):
+            await asyncio.Future()
+
+    def run_looper(self):
+        loop = asyncio.new_event_loop()
+        asyncio.run_coroutine_threadsafe(self.msg_looper(), loop)
+        # loop.run_until_complete(self.msg_looper())
+
+    def run_main(self):
+        # run self.server_main and self.msg_looper without blocking
+        loop = asyncio.new_event_loop()
+        asyncio.set_event_loop(loop)
+        loop.run_until_complete(asyncio.gather(self.server_main(), self.msg_looper()))
 
     async def handler(self, websocket, path):
         while True:
