@@ -90,6 +90,22 @@ EPM 是一个用于 EH Forwarder Bot 的 Parabox 主端。需结合 Parabox WS �
 
     token: abcdefghij
 
+    # [Message Sending Interval]
+    # The time interval for getting messages to send from the database. If the time is too short,
+    # it will cause high-frequency query of the database, if the time is too long, it will cause a
+    # long receiving delay. The unit is second.
+
+    sending_interval: 3
+
+    # [Compatibility Mode]
+    # Compatibility mode is used to enable compatibility with slaves that does not support the
+    # feature of obtaining group members' avatars.
+    # It SHOULD NOT be enabled most of the time.
+
+    compatibility_mode: true
+
+
+
 已知问题
 =========
 
