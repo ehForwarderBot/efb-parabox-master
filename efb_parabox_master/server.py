@@ -47,6 +47,7 @@ class ServerManager:
         self.websocket_users = set()
 
         # run self.run_main in another thread
+        self.loop = asyncio.new_event_loop()
         self.thread = threading.Thread(target=self.run_main)
         self.thread.start()
 
@@ -55,6 +56,7 @@ class ServerManager:
 
     def graceful_stop(self):
         self.logger.debug("Websocket server stopped")
+        self.loop.stop()
 
     async def msg_looper(self):
         while True:
@@ -102,10 +104,9 @@ class ServerManager:
 
     def run_server(self):
         self.logger.info("Websocket listening at %s : %s", self.host, self.port)
-        loop = asyncio.new_event_loop()
         # asyncio.set_event_loop(loop)
         # server = websockets.serve(self.handler, self.host, self.port)
-        asyncio.run_coroutine_threadsafe(self.server_main(), loop)
+        asyncio.run_coroutine_threadsafe(self.server_main(), self.loop)
         # asyncio.run(self.server_main())
 
     async def server_main(self):
