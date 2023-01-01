@@ -209,7 +209,7 @@ def input_sending_interval(data: DataModel, default=None):
                 print("Please try again.")
                 continue
         else:
-            return int(ans)
+            return float(ans)
 
 
 def setup_sending_interval(data):

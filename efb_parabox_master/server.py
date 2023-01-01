@@ -48,7 +48,7 @@ class ServerManager:
 
         # run self.run_main in another thread
         self.loop = asyncio.new_event_loop()
-        self.thread = threading.Thread(target=self.run_main)
+        self.thread = threading.Thread(target=self.run_main, daemon=True)
         self.thread.start()
 
     def pulling(self):
