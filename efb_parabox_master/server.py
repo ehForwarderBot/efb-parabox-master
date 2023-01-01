@@ -62,14 +62,17 @@ class ServerManager:
         while True:
             # check self.websocket_users empty
             if len(self.websocket_users) == 0:
-                self.logger.debug("no websocket user, sleep 1s")
-                await asyncio.sleep(1)
+                self.logger.debug("no websocket user, sleep 2s")
+                await asyncio.sleep(2)
                 continue
 
             msg_json = self.db.take_msg_json()
             if msg_json is not None:
                 self.logger.info("Get 1 message to send , tried %s times", msg_json.tried)
                 await self.send_message(msg_json.json)
+            else:
+                self.logger.debug("no message to send, sleep 2s")
+                await asyncio.sleep(2)
 
             await asyncio.sleep(self.sending_interval)
 
@@ -120,9 +123,8 @@ class ServerManager:
 
     def run_main(self):
         # run self.server_main and self.msg_looper without blocking
-        loop = asyncio.new_event_loop()
-        asyncio.set_event_loop(loop)
-        loop.run_until_complete(asyncio.gather(self.server_main(), self.msg_looper()))
+        asyncio.set_event_loop(self.loop)
+        asyncio.run(asyncio.gather(self.server_main(), self.msg_looper()))
 
     async def handler(self, websocket, path):
         while True:
