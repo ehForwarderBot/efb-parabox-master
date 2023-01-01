@@ -38,7 +38,7 @@ class DataModel:
             "token": ''.join(random.sample(
                 ['z', 'y', 'x', 'w', 'v', 'u', 't', 's', 'r', 'q', 'p', 'o', 'n', 'm', 'l', 'k', 'j', 'i', 'h', 'g',
                  'f', 'e', 'd', 'c', 'b', 'a'], 10)),
-            "sending_interval": 1,
+            "sending_interval": 0,
             "compatibility_mode": False
         }
 

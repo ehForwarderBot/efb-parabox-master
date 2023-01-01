@@ -47,16 +47,18 @@ class ServerManager:
         self.websocket_users = set()
 
         # run self.run_main in another thread
-        self.loop = asyncio.new_event_loop()
-        self.thread = threading.Thread(target=self.run_main)
-        self.thread.start()
+        self.ws_loop = asyncio.new_event_loop()
+        self.msg_loop = asyncio.new_event_loop()
+        self.ws_thread = threading.Thread(target=self.run_server, daemon=True).start()
+        self.msg_thread = threading.Thread(target=self.run_looper, daemon=True).start()
 
     def pulling(self):
         pass
 
     def graceful_stop(self):
         self.logger.debug("Websocket server stopped")
-        self.loop.stop()
+        self.ws_loop.stop()
+        self.ws_loop.stop()
 
     async def msg_looper(self):
         while True:
@@ -104,19 +106,16 @@ class ServerManager:
 
     def run_server(self):
         self.logger.info("Websocket listening at %s : %s", self.host, self.port)
-        # asyncio.set_event_loop(loop)
-        # server = websockets.serve(self.handler, self.host, self.port)
-        asyncio.run_coroutine_threadsafe(self.server_main(), self.loop)
-        # asyncio.run(self.server_main())
+        asyncio.set_event_loop(self.ws_loop)
+        self.ws_loop.run_until_complete(self.server_main())
 
     async def server_main(self):
         async with websockets.serve(self.handler, self.host, self.port):
             await asyncio.Future()
 
     def run_looper(self):
-        loop = asyncio.new_event_loop()
-        asyncio.run_coroutine_threadsafe(self.msg_looper(), loop)
-        # loop.run_until_complete(self.msg_looper())
+        asyncio.set_event_loop(self.msg_loop)
+        self.msg_loop.run_until_complete(self.msg_looper())
 
     def run_main(self):
         # run self.server_main and self.msg_looper without blocking
