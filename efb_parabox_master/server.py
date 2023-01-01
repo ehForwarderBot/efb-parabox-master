@@ -75,7 +75,7 @@ class ServerManager:
 
     async def send_message(self, json_str):
         self.logger.debug("websocket_users: %s", len(self.websocket_users))
-        for websocket in self.websocket_users:
+        for websocket in self.websocket_users.copy():
             self.logger.debug("sending ws to: %s", websocket)
             await websocket.send(
                 json.dumps({
