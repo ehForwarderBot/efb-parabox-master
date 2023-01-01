@@ -1,16 +1,14 @@
 # coding=utf-8
 
 import logging
+import time
 from typing import TYPE_CHECKING, Optional
 
-from peewee import TextField, CharField, BlobField, Model, DoesNotExist, BooleanField, IntegerField
-from playhouse.sqliteq import SqliteQueueDatabase
+from ehforwarderbot import utils
+from ehforwarderbot.types import ModuleID, ChatID
+from peewee import TextField, CharField, BlobField, Model, DoesNotExist, IntegerField, TimestampField
 from playhouse.migrate import SqliteMigrator, migrate
-
-from ehforwarderbot import Message as EFBMessage
-from ehforwarderbot import utils, Channel, coordinator, MsgType
-from ehforwarderbot.message import Substitutions, MessageCommands, MessageAttribute
-from ehforwarderbot.types import ModuleID, ChatID, MessageID, ReactionName
+from playhouse.sqliteq import SqliteQueueDatabase
 
 if TYPE_CHECKING:
     from . import ParaboxChannel
@@ -38,6 +36,7 @@ class MsgJson(BaseModel):
     uid = TextField(unique=True, primary_key=True)
     json = TextField()
     tried = IntegerField()
+    last_try_timestamp = TimestampField(default=0)
 
 
 class DatabaseManager:
@@ -56,6 +55,11 @@ class DatabaseManager:
         self.logger.debug("Checking database migration...")
         if not MsgJson.table_exists():
             self._create()
+        else:
+            msg_json_columns = {i.name for i in database.get_columns("msgjson")}
+            slave_chat_info_columns = {i.name for i in database.get_columns("slavechatinfo")}
+            if "last_try_timestamp" not in msg_json_columns:
+                self._migrate(0)
 
     def stop_worker(self):
         database.stop()
@@ -66,6 +70,22 @@ class DatabaseManager:
         Initializing tables.
         """
         database.create_tables([SlaveChatInfo, MsgJson])
+
+    @staticmethod
+    def _migrate(i: int):
+        """
+        Run migrations.
+
+        Args:
+            i: Migration ID
+        """
+        migrator = SqliteMigrator(database)
+
+        if i <= 0:
+            # Migration 0: Add media file ID and editable message ID
+            migrate(
+                migrator.add_column("msgjson", "last_try_timestamp", MsgJson.last_try_timestamp),
+            )
 
     @staticmethod
     def refresh_msg_json():
@@ -95,11 +115,12 @@ class DatabaseManager:
     def take_msg_json() -> Optional[MsgJson]:
         try:
             msg_json: MsgJson = MsgJson.select() \
-                .where(MsgJson.tried < 4) \
+                .where(MsgJson.tried < 4 and int(time.time()) - MsgJson.last_try_timestamp > 5) \
                 .order_by(MsgJson.tried) \
                 .first()
             if msg_json is not None:
                 msg_json.tried = msg_json.tried + 1
+                msg_json.last_try_timestamp = int(time.time())
                 msg_json.save()
                 return msg_json
             else:
