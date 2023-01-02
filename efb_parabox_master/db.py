@@ -2,7 +2,7 @@
 
 import logging
 import time
-from typing import TYPE_CHECKING, Optional
+from typing import TYPE_CHECKING, Optional, Dict
 
 from ehforwarderbot import utils
 from ehforwarderbot.types import ModuleID, ChatID
@@ -115,7 +115,7 @@ class DatabaseManager:
     def take_msg_json() -> Optional[MsgJson]:
         try:
             msg_json: MsgJson = MsgJson.select() \
-                .where(MsgJson.tried < 4 and int(time.time()) - MsgJson.last_try_timestamp > 5) \
+                .where(int(time.time()) - MsgJson.last_try_timestamp > 5) \
                 .order_by(MsgJson.tried) \
                 .first()
             if msg_json is not None:
@@ -123,6 +123,24 @@ class DatabaseManager:
                 msg_json.last_try_timestamp = int(time.time())
                 msg_json.save()
                 return msg_json
+            else:
+                return None
+        except DoesNotExist:
+            return None
+
+    @staticmethod
+    def take_all_msg_json() -> Optional[list[MsgJson]]:
+        try:
+            query = MsgJson.select() \
+                .where(int(time.time()) - MsgJson.last_try_timestamp > 5) \
+                .order_by(MsgJson.tried)
+            msg_json_list = list(query)
+            if len(msg_json_list) > 0:
+                for msg_json in msg_json_list:
+                    msg_json.tried = msg_json.tried + 1
+                    msg_json.last_try_timestamp = int(time.time())
+                    msg_json.save()
+                return msg_json_list
             else:
                 return None
         except DoesNotExist:

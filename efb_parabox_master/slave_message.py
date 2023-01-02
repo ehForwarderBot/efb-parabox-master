@@ -39,6 +39,7 @@ class SlaveMessageProcessor:
 
         json_str = self.build_json(msg)
         self.db.set_msg_json(uid=msg.uid, json=json_str)
+        self.channel.server_manager.send_message(json_str)
         # get_or_create_eventloop().run_until_complete(self.channel.server_manager.send_message(json_str))
         # self.logger.debug(msg.chat.uid)
         # self.logger.debug(msg.author.uid)

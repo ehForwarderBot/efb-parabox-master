@@ -1,3 +1,4 @@
+import asyncio
 import base64
 import logging
 from io import BytesIO
@@ -38,15 +39,18 @@ class MasterMessageProcessor:
         """
         Process a message received from Parabox.
         """
-        self.logger.debug(json_obj)
         if json_obj['type'] == 'message':
+            self.logger.info("Processing message from Parabox.")
             self.process_parabox_message_message(json_obj['data'])
         elif json_obj['type'] == 'recall':
+            self.logger.info("Processing message recall from Parabox.")
             self.process_parabox_message_recall(json_obj['data'])
         elif json_obj['type'] == 'response':
+            self.logger.info("Processing response from Parabox.")
             self.db.resort_msg_json(json_obj['data'])
         elif json_obj['type'] == 'refresh':
-            self.db.refresh_msg_json()
+            self.logger.info("Processing refresh from Parabox.")
+            self.channel.server_manager.send_all_failed_msg()
         else:
             self.logger.warning("Unknown message type: %s", json_obj['type'])
 
