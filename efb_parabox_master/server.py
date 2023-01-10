@@ -24,16 +24,6 @@ if TYPE_CHECKING:
     from .db import DatabaseManager
 
 
-# def get_or_create_eventloop():
-#     try:
-#         return asyncio.get_event_loop()
-#     except RuntimeError as ex:
-#         if "There is no current event loop in thread" in str(ex):
-#             loop = asyncio.new_event_loop()
-#             asyncio.set_event_loop(loop)
-#             return asyncio.get_event_loop()
-
-
 class ServerManager:
     def __init__(self, channel: 'ParaboxChannel'):
         self.logger: logging.Logger = logging.getLogger(__name__)
@@ -48,53 +38,21 @@ class ServerManager:
         self.loop = asyncio.new_event_loop()
 
         threading.Thread(target=self.run_main).start()
-        # self.run_main()
 
     def run_main(self):
         self.loop.run_until_complete(self.server_main())
         self.loop.run_forever()
-        # asyncio.run(self.server_main())
 
     async def server_main(self):
         self.logger.info("Websocket listening at %s : %s", self.host, self.port)
         async with websockets.serve(self.handler, self.host, self.port, max_size=1_000_000_000):
             await asyncio.Future()
 
-    # async def msg_looper(self, websocket):
-    #     while True:
-    #         msg_json = self.db.take_msg_json()
-    #         if msg_json is not None:
-    #             self.logger.info("Get 1 message to send , tried %s times", msg_json.tried)
-    #             await self.send_message(websocket, msg_json.json)
-    #         else:
-    #             self.logger.info("no message to send, sleep 2s")
-    #             await asyncio.sleep(2)
-    #
-    #         await asyncio.sleep(self.sending_interval)
-
-    def send_all_failed_msg(self):
-        self.loop.create_task(self.async_send_all_failed_msg())
-        # self.loop.run_until_complete(self.async_send_all_failed_msg())
-        # asyncio.run(self.async_send_all_failed_msg())
-
-
-    async def async_send_all_failed_msg(self):
-        self.logger.info("Send all failed msg...")
-        failed_msg_jsons = self.db.take_all_msg_json()
-        self.logger.info("Get %s failed msgs...", len(failed_msg_jsons))
-        for index, msg_json in enumerate(failed_msg_jsons, start=1):
-            self.logger.info("Send %s/%s failed msg, tried %s times", index, len(failed_msg_jsons), msg_json.tried)
-            await self.async_send_message(msg_json.json)
-
     async def handler(self, websocket, path):
         if len(self.websocket_users) == 0:
             try:
                 await self.check_user_permit(websocket)
                 await self.recv_user_msg(websocket)
-                # recv_task = asyncio.create_task(self.recv_user_msg(websocket))
-                # loop_task = asyncio.create_task(self.msg_looper(websocket))
-                # await recv_task
-                # await loop_task
             except websockets.ConnectionClosed:
                 self.logger.info("ConnectionClosed... %s", path)
                 self.websocket_users.remove(websocket)
@@ -158,10 +116,9 @@ class ServerManager:
         self.logger.info("recv user msg...")
         while True:
             recv_text = await websocket.recv()
-            # self.logger.debug("recv_text: %s", recv_text)
             json_obj = json.loads(recv_text)
             self.channel.master_messages.process_parabox_message(json_obj)
-            # await asyncio.sleep(0.1)
+            await asyncio.sleep(1)
 
     def pulling(self):
         pass
@@ -171,9 +128,7 @@ class ServerManager:
         self.loop.stop()
 
     def send_message(self, json_str):
-        # self.loop.run_until_complete(self.async_send_message(json_str))
         self.loop.create_task(self.async_send_message(json_str))
-        # asyncio.run(self.async_send_message(json_str))
 
     async def async_send_message(self, json_str):
         for websocket in self.websocket_users:

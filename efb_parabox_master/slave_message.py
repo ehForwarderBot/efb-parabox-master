@@ -4,6 +4,7 @@ import io
 import logging
 import json
 import time
+from queue import Queue
 from typing import TYPE_CHECKING
 
 from PIL import Image
@@ -34,16 +35,22 @@ class SlaveMessageProcessor:
         self.logger = logging.getLogger(__name__)
         self.logger.debug("SlaveMessageProcessor initialized.")
         self.compatibility_mode = channel.config.get("compatibility_mode")
+        self.msg_temp = dict()
 
     def send_message(self, msg: Message) -> Message:
-
+        self.logger.info("msg_temp size: %s", len(self.msg_temp))
         json_str = self.build_json(msg)
-        self.db.set_msg_json(uid=msg.uid, json=json_str)
+        self.msg_temp[msg.uid] = json_str
+        # self.db.set_msg_json(uid=msg.uid, json=json_str)
         self.channel.server_manager.send_message(json_str)
-        # get_or_create_eventloop().run_until_complete(self.channel.server_manager.send_message(json_str))
-        # self.logger.debug(msg.chat.uid)
-        # self.logger.debug(msg.author.uid)
         return msg
+
+    def resort_message(self, uid: str):
+        self.msg_temp.pop(uid)
+
+    def refresh_msg(self):
+        for msg_json in self.msg_temp.values():
+            self.channel.server_manager.send_message(msg_json)
 
     def build_json(self, msg: Message) -> str:
         slave_msg_id = msg.uid

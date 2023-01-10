@@ -47,10 +47,12 @@ class MasterMessageProcessor:
             self.process_parabox_message_recall(json_obj['data'])
         elif json_obj['type'] == 'response':
             self.logger.info("Processing response from Parabox.")
-            self.db.resort_msg_json(json_obj['data'])
+            # self.db.resort_msg_json(json_obj['data'])
+            self.channel.slave_messages.resort_message(json_obj['data'])
         elif json_obj['type'] == 'refresh':
             self.logger.info("Processing refresh from Parabox.")
-            self.channel.server_manager.send_all_failed_msg()
+            self.channel.slave_messages.refresh_msg()
+            # self.channel.server_manager.send_all_failed_msg()
         else:
             self.logger.warning("Unknown message type: %s", json_obj['type'])
 
