@@ -5,6 +5,7 @@ import json
 import logging
 import time
 from json import JSONDecodeError
+from queue import Queue
 from typing import TYPE_CHECKING
 import threading
 
@@ -35,13 +36,33 @@ class ServerManager:
         self.sending_interval = channel.config.get("sending_interval")
 
         self.websocket_users = set()
-        self.loop = asyncio.new_event_loop()
+        self.loop = asyncio.get_event_loop()
 
-        threading.Thread(target=self.run_main).start()
+        # create queue to temp msg
+        self.msg_temp = Queue()
+
+        ws_thread = threading.Thread(target=self.run_main)
+        msg_thread = threading.Thread(target=self.msg_main, args=(self.msg_temp,))
+        ws_thread.setDaemon(True)
+        msg_thread.setDaemon(True)
+        ws_thread.start()
+        msg_thread.start()
+
+    def msg_main(self, msg_temp):
+        self.loop.run_until_complete(self.msg_looper(msg_temp))
+
+    async def msg_looper(self, msg_temp: Queue):
+        while True:
+            if not msg_temp.empty():
+                msg = msg_temp.get()
+                # self.logger.info("Sending message, msg_temp_size: %s", msg_temp.qsize())
+                await self.async_send_message(msg)
+                # self.logger.info("Message sent")
+            await asyncio.sleep(self.sending_interval)
 
     def run_main(self):
         self.loop.run_until_complete(self.server_main())
-        self.loop.run_forever()
+        # self.loop.run_forever()
 
     async def server_main(self):
         self.logger.info("Websocket listening at %s : %s", self.host, self.port)
@@ -118,7 +139,6 @@ class ServerManager:
             recv_text = await websocket.recv()
             json_obj = json.loads(recv_text)
             self.channel.master_messages.process_parabox_message(json_obj)
-            await asyncio.sleep(1)
 
     def pulling(self):
         pass
@@ -128,7 +148,8 @@ class ServerManager:
         self.loop.stop()
 
     def send_message(self, json_str):
-        self.loop.create_task(self.async_send_message(json_str))
+        self.msg_temp.put(json_str)
+        # self.loop.create_task(self.async_send_message(json_str))
 
     async def async_send_message(self, json_str):
         for websocket in self.websocket_users:
@@ -139,7 +160,7 @@ class ServerManager:
                     "data": json_str
                 })
             )
-            await asyncio.sleep(self.sending_interval)
+
 
     def send_status(self, status: 'Status'):
         if isinstance(status, ChatUpdates):
