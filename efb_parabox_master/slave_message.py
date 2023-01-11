@@ -46,7 +46,10 @@ class SlaveMessageProcessor:
         return msg
 
     def resort_message(self, uid: str):
-        self.msg_temp.pop(uid)
+        try:
+            self.msg_temp.pop(uid)
+        except KeyError:
+            pass
 
     def refresh_msg(self):
         for msg_json in self.msg_temp.values():
