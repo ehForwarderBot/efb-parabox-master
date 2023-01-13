@@ -1,26 +1,19 @@
-import asyncio
+
 import base64
 import logging
-from io import BytesIO
 import tempfile
-from queue import Queue
-from tempfile import NamedTemporaryFile
-from threading import Thread
-from typing import Optional, TYPE_CHECKING, Tuple, Any
+from typing import TYPE_CHECKING
 
-from PIL import Image
 from ehforwarderbot import coordinator
+from ehforwarderbot import utils as efb_utils
 from ehforwarderbot.chat import SelfChatMember
 from ehforwarderbot.constants import MsgType
-from ehforwarderbot import utils as efb_utils
 from ehforwarderbot.exceptions import EFBMessageTypeNotSupported, EFBChatNotFound, \
-    EFBMessageError, EFBOperationNotSupported, EFBException
-from ehforwarderbot.message import LocationAttribute, Message
-from ehforwarderbot.status import MessageRemoval
-from ehforwarderbot.types import ModuleID, MessageID, ChatID
+    EFBOperationNotSupported, EFBException
+from ehforwarderbot.types import MessageID
+
 from . import utils, ChatObjectCacheManager
 from .message import EPMMsg
-from .utils import get_chat_id
 
 if TYPE_CHECKING:
     from . import ParaboxChannel

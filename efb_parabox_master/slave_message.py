@@ -16,10 +16,6 @@ from ehforwarderbot.message import LinkAttribute, LocationAttribute, MessageComm
     StatusAttribute
 from ehforwarderbot.status import ChatUpdates, MemberUpdates, MessageRemoval, MessageReactionsUpdate
 from . import utils
-import asyncio
-import nest_asyncio
-
-nest_asyncio.apply()
 
 from .utils import str2int
 
@@ -52,7 +48,7 @@ class SlaveMessageProcessor:
             pass
 
     def refresh_msg(self):
-        for msg_json in self.msg_temp.values():
+        for msg_json in self.msg_temp.copy().values():
             self.channel.server_manager.send_message(msg_json)
 
     def build_json(self, msg: Message) -> str:

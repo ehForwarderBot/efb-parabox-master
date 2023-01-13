@@ -16,9 +16,7 @@ import asyncio
 from asyncio.exceptions import TimeoutError
 import websockets
 
-# import nest_asyncio
-#
-# nest_asyncio.apply()
+import nest_asyncio
 
 if TYPE_CHECKING:
     from . import ParaboxChannel
@@ -36,20 +34,23 @@ class ServerManager:
         self.sending_interval = channel.config.get("sending_interval")
 
         self.websocket_users = set()
-        self.loop = asyncio.get_event_loop()
+        self.loop = asyncio.new_event_loop()
 
         # create queue to temp msg
         self.msg_temp = Queue()
 
+        self.server = websockets.serve(self.handler, self.host, self.port, max_size=1_000_000_000, loop=self.loop)
         ws_thread = threading.Thread(target=self.run_main)
-        msg_thread = threading.Thread(target=self.msg_main, args=(self.msg_temp,))
+        msg_thread = threading.Thread(target=self.msg_main)
         ws_thread.setDaemon(True)
         msg_thread.setDaemon(True)
         ws_thread.start()
         msg_thread.start()
 
-    def msg_main(self, msg_temp):
-        self.loop.run_until_complete(self.msg_looper(msg_temp))
+    def msg_main(self):
+        asyncio.set_event_loop(self.loop)
+        nest_asyncio.apply()
+        self.loop.run_until_complete(self.msg_looper(self.msg_temp))
 
     async def msg_looper(self, msg_temp: Queue):
         while True:
@@ -61,13 +62,17 @@ class ServerManager:
             await asyncio.sleep(self.sending_interval)
 
     def run_main(self):
-        self.loop.run_until_complete(self.server_main())
+        asyncio.set_event_loop(self.loop)
+        nest_asyncio.apply()
+        self.logger.info("Websocket listening at %s : %s", self.host, self.port)
+        self.loop.run_until_complete(self.server)
+        # self.loop.run_until_complete(self.server_main())
         # self.loop.run_forever()
 
-    async def server_main(self):
-        self.logger.info("Websocket listening at %s : %s", self.host, self.port)
-        async with websockets.serve(self.handler, self.host, self.port, max_size=1_000_000_000):
-            await asyncio.Future()
+    # async def server_main(self):
+    #     self.logger.info("Websocket listening at %s : %s", self.host, self.port)
+    #     async with websockets.serve(self.handler, self.host, self.port, max_size=1_000_000_000, loop=self.loop):
+    #         await asyncio.Future()
 
     async def handler(self, websocket, path):
         if len(self.websocket_users) == 0:
@@ -153,7 +158,7 @@ class ServerManager:
 
     async def async_send_message(self, json_str):
         for websocket in self.websocket_users:
-            self.logger.debug("sending ws to: %s", websocket)
+            self.logger.info("sending ws to: %s", websocket)
             await websocket.send(
                 json.dumps({
                     "type": "message",
