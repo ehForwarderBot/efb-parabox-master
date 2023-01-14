@@ -1,6 +1,10 @@
-setuptools~=63.2.0
+setuptools~=65.6.3
 peewee~=3.15.4
 ehforwarderbot~=2.1.1
 CJKwrap~=2.2
 Pillow~=9.2.0
 websockets~=10.4
+typing~=3.7.4.3
+cos-python-sdk-v5==1.9.22
+qiniu~=7.9.0
+firebase_admin~=6.0.1

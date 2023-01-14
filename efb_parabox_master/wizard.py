@@ -98,6 +98,19 @@ class DataModel:
                 f.write("\n")
                 self.yaml.dump({"compatibility_mode": self.data['compatibility_mode']}, f)
                 f.write("\n")
+                f.write(
+                    "#\n"
+                    "# Experimental Options\n"
+                    "# --------------\n"
+                    "#\n"
+                )
+                self.yaml.dump({"enable_fcm": False}, f)
+                f.write("\n")
+                self.yaml.dump({"fcm_token": None}, f)
+                f.write("\n")
+                self.yaml.dump({"object_storage": None}, f)
+                f.write("\n")
+                self.yaml.dump({"authorization_file_path": 'service-account.json'}, f)
             with self.config_path.open() as f:
                 self.data = self.yaml.load(f)
             self.building_default = False

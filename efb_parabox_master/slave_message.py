@@ -26,7 +26,9 @@ if TYPE_CHECKING:
 
 class SlaveMessageProcessor:
     def __init__(self, channel: 'ParaboxChannel'):
+        self.object_storage = None
         self.channel = channel
+        self.config = channel.config
         self.db: 'DatabaseManager' = channel.db
         self.logger = logging.getLogger(__name__)
         self.logger.debug("SlaveMessageProcessor initialized.")
@@ -35,11 +37,16 @@ class SlaveMessageProcessor:
 
     def send_message(self, msg: Message) -> Message:
         self.logger.info("msg_temp size: %s", len(self.msg_temp))
-        json_str = self.build_json(msg)
-        self.msg_temp[msg.uid] = json_str
-        # self.db.set_msg_json(uid=msg.uid, json=json_str)
-        self.channel.server_manager.send_message(json_str)
-        return msg
+        if self.config.get("enable_fcm"):
+            msg_obj = self.build_fcm_obj(msg)
+            self.channel.fcm_util.send(msg_obj)
+            return msg
+        else:
+            json_str = self.build_json(msg)
+            self.msg_temp[msg.uid] = json_str
+            # self.db.set_msg_json(uid=msg.uid, json=json_str)
+            self.channel.server_manager.send_message(json_str)
+            return msg
 
     def resort_message(self, uid: str):
         try:
@@ -229,4 +236,102 @@ class SlaveMessageProcessor:
 
     def get_status_content_obj(self, msg):
         pass
+
+    def build_fcm_obj(self, msg: Message) -> dict:
+        slave_msg_id = msg.uid
+        slave_origin_uid = utils.chat_id_to_str(chat=msg.chat)
+
+        content_obj = self.get_fcm_content_obj(msg)
+
+        return {
+            "contents": [content_obj],
+            "profile": {
+                "name": msg.author.name,
+                "avatar": '',
+            },
+            "subjectProfile": {
+                "name": msg.chat.name,
+                "avatar": '',
+            },
+            "timestamp": int(round(time.time() * 1000)),
+            "chatType": self.get_chat_type(msg.chat),
+            "slaveOriginUid": slave_origin_uid,
+            "slaveMsgId": slave_msg_id,
+        }
+
+    def get_fcm_content_obj(self, msg):
+        if msg.type == MsgType.Text:
+            return self.get_text_content_obj(msg)
+        elif msg.type == MsgType.Image:
+            return self.get_fcm_image_content_obj(msg)
+        # elif msg.type == MsgType.Voice:
+        #     return self.get_fcm_voice_content_obj(msg)
+        # elif msg.type == MsgType.Audio:
+        #     return self.get_fcm_audio_content_obj(msg)
+        # elif msg.type == MsgType.File:
+        #     return self.get_fcm_file_content_obj(msg)
+        # elif msg.type == MsgType.Animation:
+        #     return self.get_fcm_animation_content_obj(msg)
+        # elif msg.type == MsgType.Video:
+        #     return self.get_fcm_video_content_obj(msg)
+        # elif msg.type == MsgType.Sticker:
+        #     return self.get_fcm_sticker_content_obj(msg)
+        # elif msg.type == MsgType.Location:
+        #     return self.get_fcm_location_content_obj(msg)
+        # elif msg.type == MsgType.Link:
+        #     return self.get_fcm_link_content_obj(msg)
+        # elif msg.type == MsgType.Status:
+        #     return self.get_fcm_status_content_obj(msg)
+        else:
+            return {
+                "type": 0,
+                "text": msg.text,
+            }
+
+    def get_fcm_image_content_obj(self, msg):
+        file = msg.file
+        file.seek(0)
+        res = self.upload_file(file, msg.filename)
+        if res is not None:
+            return {
+                "type": 1,
+                "url": res.get('url'),
+                "cloud_type": res.get('cloud_type'),
+                "cloud_id": res.get('cloud_id'),
+                "fileName": msg.filename,
+            }
+        else:
+            return {
+                "type": 1,
+                "url": '',
+                "cloud_type": '',
+                "cloud_id": '',
+                "fileName": msg.filename,
+            }
+
+    def get_fcm_voice_content_obj(self, msg):
+        pass
+
+    def get_fcm_audio_content_obj(self, msg):
+        pass
+
+    def get_fcm_file_content_obj(self, msg):
+        pass
+
+    def get_fcm_animation_content_obj(self, msg):
+        pass
+
+    def get_fcm_video_content_obj(self, msg):
+        pass
+
+    def upload_file(self, file, filename):
+        if self.config.get('object_storage') is None:
+            return None
+        else:
+            if self.config.get('object_storage').get('type') == 'qiniu':
+                return self.channel.qiniu_util.upload_file(file, filename)
+            elif self.config.get('object_storage').get('type') == 'tencent_cos':
+                return self.channel.tencent_cos_util.upload_file(file, filename)
+            else:
+                return None
 

@@ -1,13 +1,11 @@
 # coding=utf-8
 
-import itertools
 import json
 import logging
-import time
-from json import JSONDecodeError
 from queue import Queue
 from typing import TYPE_CHECKING
-import threading
+import multiprocessing
+from multiprocessing import shared_memory
 
 from ehforwarderbot import Status
 from ehforwarderbot.status import ChatUpdates, MemberUpdates, MessageRemoval, MessageReactionsUpdate
@@ -38,14 +36,35 @@ class ServerManager:
 
         # create queue to temp msg
         self.msg_temp = Queue()
+        self._ensure_process_store = {}
 
         self.server = websockets.serve(self.handler, self.host, self.port, max_size=1_000_000_000, loop=self.loop)
-        ws_thread = threading.Thread(target=self.run_main)
-        msg_thread = threading.Thread(target=self.msg_main)
-        ws_thread.setDaemon(True)
-        msg_thread.setDaemon(True)
-        ws_thread.start()
-        msg_thread.start()
+        # ws_thread = threading.Thread(target=self.run_main)
+        # msg_thread = threading.Thread(target=self.msg_main)
+        # ws_thread.setDaemon(True)
+        # msg_thread.setDaemon(True)
+        # ws_thread.start()
+        # msg_thread.start()
+
+        ws_process = multiprocessing.Process(target=self.run_main, daemon=True)
+        msg_process = multiprocessing.Process(target=self.msg_main, daemon=True)
+        ws_process.start()
+        msg_process.start()
+        self.ensure_single_process(ws_process.name)
+        self.ensure_single_process(msg_process.name)
+
+    def ensure_single_process(self, name: str):
+        if name in self._ensure_process_store:
+            return
+        try:
+            shm = shared_memory.SharedMemory(name='ensure_process__' + name,
+                                             create=True,
+                                             size=1)
+        except FileExistsError:
+            print(f"{name} is already running!")
+            raise
+        self._ensure_process_store[name] = shm
+
 
     def msg_main(self):
         asyncio.set_event_loop(self.loop)
@@ -62,10 +81,14 @@ class ServerManager:
             await asyncio.sleep(self.sending_interval)
 
     def run_main(self):
-        asyncio.set_event_loop(self.loop)
-        nest_asyncio.apply()
-        self.logger.info("Websocket listening at %s : %s", self.host, self.port)
-        self.loop.run_until_complete(self.server)
+        try:
+            asyncio.set_event_loop(self.loop)
+            nest_asyncio.apply()
+            self.logger.info("Websocket listening at %s : %s", self.host, self.port)
+            self.loop.run_until_complete(self.server)
+        except Exception as e:
+            self.logger.info("Exception Name: %s: %s", type(e).__name__, e)
+
         # self.loop.run_until_complete(self.server_main())
         # self.loop.run_forever()
 

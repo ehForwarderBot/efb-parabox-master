@@ -23,11 +23,14 @@ from ruamel.yaml import YAML
 
 from .chat_object_cache import ChatObjectCacheManager
 from .db import DatabaseManager
+from .fcm_util import FCMUtil
 from .master_message import MasterMessageProcessor
+from .qiniu_util import QiniuUtil
 from .server import ServerManager
 from .slave_message import SlaveMessageProcessor
 from . import utils as epm_utils
 from .__version__ import __version__
+from .tencent_cos_util import TencentCosUtil
 
 
 class ParaboxChannel(MasterChannel):
@@ -72,6 +75,9 @@ class ParaboxChannel(MasterChannel):
         self.slave_messages: SlaveMessageProcessor = SlaveMessageProcessor(self)
         self.master_messages: MasterMessageProcessor = MasterMessageProcessor(self)
         self.server_manager: ServerManager = ServerManager(self)
+        self.fcm_util: FCMUtil = FCMUtil(self)
+        self.tencent_cos_util: TencentCosUtil = TencentCosUtil(self)
+        self.qiniu_util: QiniuUtil = QiniuUtil(self)
 
         # Load predefined MIME types
         mimetypes.init(files=["mimetypes"])
