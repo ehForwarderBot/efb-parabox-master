@@ -105,12 +105,20 @@ class ParaboxChannel(MasterChannel):
         """
         Message polling process.
         """
-        self.server_manager.pulling()
+        if self.config.get("enable_fcm", False) is True:
+            pass
+        else:
+            self.server_manager.pulling()
 
     def send_status(self, status: 'Status'):
-        self.server_manager.send_status(status)
+        if self.config.get("enable_fcm", False) is True:
+            pass
+        else:
+            self.server_manager.send_status(status)
 
     def stop_polling(self):
         self.logger.debug("Gracefully stopping %s (%s).", self.channel_name, self.channel_id)
-        self.server_manager.graceful_stop()
-        pass
+        if self.config.get("enable_fcm", False) is True:
+            pass
+        else:
+            self.server_manager.graceful_stop()

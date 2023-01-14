@@ -17,11 +17,11 @@ class FCMUtil:
         self.app = None
 
     def init(self):
-        path = efb_utils.get_data_path(self.channel.channel_id) + self.authorization_file_path
+        path = efb_utils.get_data_path(self.channel.channel_id) / self.authorization_file_path
         cred = credentials.Certificate(path)
         self.app = firebase_admin.initialize_app(credential=cred)
 
-    def send(self, data):
+    def send(self, data: str):
         if self.app is None:
             self.init()
         message = messaging.Message(
@@ -29,4 +29,4 @@ class FCMUtil:
             token=self.fcm_token,
         )
         response = messaging.send(message)
-        self.logger.info('Successfully sent message: %s', response)
+        self.logger.log(99, 'Successfully sent message: %s', response)

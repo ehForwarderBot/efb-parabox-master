@@ -2,6 +2,7 @@
 
 import json
 import logging
+import threading
 from queue import Queue
 from typing import TYPE_CHECKING
 import multiprocessing
@@ -27,6 +28,9 @@ class ServerManager:
         self.channel: 'ParaboxChannel' = channel
         self.db: 'DatabaseManager' = channel.db
 
+        if channel.config.get("enable_fcm", False) is True:
+            return
+
         self.host = channel.config.get("host")
         self.port = channel.config.get("port")
         self.sending_interval = channel.config.get("sending_interval")
@@ -39,19 +43,19 @@ class ServerManager:
         self._ensure_process_store = {}
 
         self.server = websockets.serve(self.handler, self.host, self.port, max_size=1_000_000_000, loop=self.loop)
-        # ws_thread = threading.Thread(target=self.run_main)
-        # msg_thread = threading.Thread(target=self.msg_main)
-        # ws_thread.setDaemon(True)
-        # msg_thread.setDaemon(True)
-        # ws_thread.start()
-        # msg_thread.start()
+        ws_thread = threading.Thread(target=self.run_main)
+        msg_thread = threading.Thread(target=self.msg_main)
+        ws_thread.setDaemon(True)
+        msg_thread.setDaemon(True)
+        ws_thread.start()
+        msg_thread.start()
 
-        ws_process = multiprocessing.Process(target=self.run_main, daemon=True)
-        msg_process = multiprocessing.Process(target=self.msg_main, daemon=True)
-        ws_process.start()
-        msg_process.start()
-        self.ensure_single_process(ws_process.name)
-        self.ensure_single_process(msg_process.name)
+        # ws_process = multiprocessing.Process(target=self.run_main, daemon=True)
+        # msg_process = multiprocessing.Process(target=self.msg_main, daemon=True)
+        # ws_process.start()
+        # msg_process.start()
+        # self.ensure_single_process(ws_process.name)
+        # self.ensure_single_process(msg_process.name)
 
     def ensure_single_process(self, name: str):
         if name in self._ensure_process_store:
@@ -73,12 +77,15 @@ class ServerManager:
 
     async def msg_looper(self, msg_temp: Queue):
         while True:
-            if not msg_temp.empty():
-                msg = msg_temp.get()
-                # self.logger.info("Sending message, msg_temp_size: %s", msg_temp.qsize())
-                await self.async_send_message(msg)
-                # self.logger.info("Message sent")
-            await asyncio.sleep(self.sending_interval)
+            try:
+                if not msg_temp.empty():
+                    msg = msg_temp.get()
+                    # self.logger.info("Sending message, msg_temp_size: %s", msg_temp.qsize())
+                    await self.async_send_message(msg)
+                    # self.logger.info("Message sent")
+                await asyncio.sleep(self.sending_interval)
+            except Exception as e:
+                pass
 
     def run_main(self):
         try:

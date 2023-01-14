@@ -106,9 +106,23 @@ class DataModel:
                 )
                 self.yaml.dump({"enable_fcm": False}, f)
                 f.write("\n")
-                self.yaml.dump({"fcm_token": None}, f)
+                self.yaml.dump({"fcm_token": "device_fcm_token"}, f)
                 f.write("\n")
                 self.yaml.dump({"object_storage": None}, f)
+                f.write(
+                    "#  type: tencent_cos\n"
+                    "#  secret_id: your_permanent_secret_id\n"
+                    "#  secret_key: your_permanent_secret_key\n"
+                    "#  bucket: examplebucket-1250000000\n"
+                    "#  region: ap-guangzhou\n"
+                    "#\n"
+                    "#  type: qiniu\n"
+                    "#  access_key: your_permanent_access_key\n"
+                    "#  secret_key: your_permanent_secret_key\n"
+                    "#  bucket: your_bucket_name\n"
+                    "#  domain: your_custom_domain\n"
+                    "#\n"
+                )
                 f.write("\n")
                 self.yaml.dump({"authorization_file_path": 'service-account.json'}, f)
             with self.config_path.open() as f:

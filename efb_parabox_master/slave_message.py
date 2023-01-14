@@ -37,8 +37,9 @@ class SlaveMessageProcessor:
 
     def send_message(self, msg: Message) -> Message:
         self.logger.info("msg_temp size: %s", len(self.msg_temp))
-        if self.config.get("enable_fcm"):
+        if self.config.get("enable_fcm", False) is True:
             msg_obj = self.build_fcm_obj(msg)
+            self.logger.log(99, msg_obj)
             self.channel.fcm_util.send(msg_obj)
             return msg
         else:
@@ -69,11 +70,11 @@ class SlaveMessageProcessor:
             "contents": [content_obj],
             "profile": {
                 "name": msg.author.name,
-                "avatar": self.get_sender_avatar_bytes_str(msg),
+                "avatar": self.base64_encode(self.get_sender_avatar(msg)),
             },
             "subjectProfile": {
                 "name": msg.chat.name,
-                "avatar": self.get_chat_avatar_bytes_str(msg),
+                "avatar": self.base64_encode(self.get_chat_avatar(msg)),
             },
             "timestamp": int(round(time.time() * 1000)),
             "chatType": self.get_chat_type(msg.chat),
@@ -82,7 +83,11 @@ class SlaveMessageProcessor:
         }
         return json.dumps(json_obj)
 
-    def get_chat_avatar_bytes_str(self, msg: Message) -> str:
+    def base64_encode(self, file: io.BytesIO) -> str:
+        file_bytes = base64.b64encode(file.read())
+        return file_bytes.decode('utf-8')
+
+    def get_chat_avatar(self, msg: Message) -> io.BytesIO:
         slave_origin_uid = utils.chat_id_to_str(chat=msg.chat)
         channel, uid, gid = utils.chat_id_str_to_id(slave_origin_uid)
         picture = coordinator.slaves[channel].get_chat_picture(msg.chat)
@@ -98,11 +103,11 @@ class SlaveMessageProcessor:
         pic_img.resize(tuple(map(lambda a: int(scale * a), pic_img.size)), Image.BICUBIC) \
             .save(pic_resized, 'PNG')
         pic_resized.seek(0)
+        return pic_resized
+        # img_bytes = base64.b64encode(pic_resized.read())
+        # return img_bytes.decode('utf-8')
 
-        img_bytes = base64.b64encode(pic_resized.read())
-        return img_bytes.decode('utf-8')
-
-    def get_sender_avatar_bytes_str(self, msg: Message) -> str:
+    def get_sender_avatar(self, msg: Message) -> io.BytesIO:
         if self.compatibility_mode:
             return ""
         else:
@@ -121,9 +126,9 @@ class SlaveMessageProcessor:
             pic_img.resize(tuple(map(lambda a: int(scale * a), pic_img.size)), Image.BICUBIC) \
                 .save(pic_resized, 'PNG')
             pic_resized.seek(0)
-
-            img_bytes = base64.b64encode(pic_resized.read())
-            return img_bytes.decode('utf-8')
+            return pic_resized
+            # img_bytes = base64.b64encode(pic_resized.read())
+            # return img_bytes.decode('utf-8')
 
     def get_content_obj(self, msg: Message) -> dict:
         if msg.type == MsgType.Text:
@@ -243,15 +248,22 @@ class SlaveMessageProcessor:
 
         content_obj = self.get_fcm_content_obj(msg)
 
+        chat_avatar = self.upload_bytes(self.get_chat_avatar(msg), msg.chat.name + ".png")
+        sender_avatar = self.upload_bytes(self.get_sender_avatar(msg), msg.author.name + ".png")
+
         return {
             "contents": [content_obj],
             "profile": {
                 "name": msg.author.name,
-                "avatar": '',
+                "avatar": sender_avatar.get("url"),
+                "avatar_cloud_type": sender_avatar.get("cloud_type"),
+                "avatar_cloud_id": sender_avatar.get("cloud_id")
             },
             "subjectProfile": {
                 "name": msg.chat.name,
-                "avatar": '',
+                "avatar": chat_avatar.get("url"),
+                "avatar_cloud_type": chat_avatar.get("cloud_type"),
+                "avatar_cloud_id": chat_avatar.get("cloud_id")
             },
             "timestamp": int(round(time.time() * 1000)),
             "chatType": self.get_chat_type(msg.chat),
@@ -292,6 +304,7 @@ class SlaveMessageProcessor:
         file = msg.file
         file.seek(0)
         res = self.upload_file(file, msg.filename)
+        self.logger.log(99, res)
         if res is not None:
             return {
                 "type": 1,
@@ -332,6 +345,17 @@ class SlaveMessageProcessor:
                 return self.channel.qiniu_util.upload_file(file, filename)
             elif self.config.get('object_storage').get('type') == 'tencent_cos':
                 return self.channel.tencent_cos_util.upload_file(file, filename)
+            else:
+                return None
+
+    def upload_bytes(self, file_bytes, filename):
+        if self.config.get('object_storage') is None:
+            return None
+        else:
+            if self.config.get('object_storage').get('type') == 'qiniu':
+                return self.channel.qiniu_util.upload_bytes(file_bytes, filename)
+            elif self.config.get('object_storage').get('type') == 'tencent_cos':
+                return self.channel.tencent_cos_util.upload_bytes(file_bytes, filename)
             else:
                 return None
 

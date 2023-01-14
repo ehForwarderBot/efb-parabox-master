@@ -1,3 +1,4 @@
+import io
 from typing import TYPE_CHECKING
 
 from qcloud_cos import CosConfig
@@ -42,7 +43,30 @@ class TencentCosUtil:
         if upload_response['ETag'] is not None:
             url_response = self.object_storage.get_presigned_download_url(Bucket=self.bucket, Key=key, Expired=3600)
             return {
-                'url': url_response['PresignedDownloadUrl'],
+                'url': url_response,
+                'cloud_type': 2,
+                'cloud_id': key,
+            }
+        else:
+            return None
+
+    def upload_bytes(self, file_bytes: io.BytesIO, filename: str):
+        if self.object_storage is None:
+            self.init()
+        file_bytes.seek(0)
+        key = 'ParaboxTemp/' + filename
+        upload_response = self.object_storage.upload_file_from_buffer(
+            Bucket=self.bucket,
+            Body=file_bytes,
+            Key=key,
+            PartSize=1,
+            MAXThread=10,
+            EnableMD5=False
+        )
+        if upload_response['ETag'] is not None:
+            url_response = self.object_storage.get_presigned_download_url(Bucket=self.bucket, Key=key, Expired=3600)
+            return {
+                'url': url_response,
                 'cloud_type': 2,
                 'cloud_id': key,
             }
@@ -56,4 +80,4 @@ class TencentCosUtil:
             Bucket=self.bucket,
             Key=key,
         )
-        return download_response['Body'].get_raw_stream()
+        return download_response.get('Body').get_raw_stream()

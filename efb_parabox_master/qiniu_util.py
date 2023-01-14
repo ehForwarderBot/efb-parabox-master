@@ -1,5 +1,5 @@
 from typing import TYPE_CHECKING
-from qiniu import Auth, put_file, etag, BucketManager
+from qiniu import Auth, put_file, etag, BucketManager, put_data
 import qiniu.config
 
 if TYPE_CHECKING:
@@ -45,3 +45,19 @@ class QiniuUtil:
         bucket = BucketManager(q)
         ret, info = bucket.fetch(self.domain + key, self.bucket, key)
         return ret['data']
+
+    def upload_bytes(self, file_bytes, filename):
+        self.init()
+
+        q = Auth(self.access_key, self.secret_key)
+        key = 'ParaboxTemp/' + filename
+        token = q.upload_token(self.bucket, key, 3600)
+        ret, info = put_data(token, key, file_bytes.getvalue())
+        if ret['key'] is not None:
+            return {
+                'url': self.domain + ret['key'],
+                'cloud_type': 3,
+                'cloud_id': ret['key'],
+            }
+        else:
+            return None
