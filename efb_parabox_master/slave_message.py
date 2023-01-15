@@ -38,9 +38,9 @@ class SlaveMessageProcessor:
     def send_message(self, msg: Message) -> Message:
         self.logger.info("msg_temp size: %s", len(self.msg_temp))
         if self.config.get("enable_fcm", False) is True:
-            msg_obj = self.build_fcm_obj(msg)
-            self.logger.log(99, msg_obj)
-            self.channel.fcm_util.send(msg_obj)
+            json_str = self.build_fcm_json(msg)
+            self.logger.log(99, json_str)
+            self.channel.fcm_util.send(json_str)
             return msg
         else:
             json_str = self.build_json(msg)
@@ -242,7 +242,7 @@ class SlaveMessageProcessor:
     def get_status_content_obj(self, msg):
         pass
 
-    def build_fcm_obj(self, msg: Message) -> dict:
+    def build_fcm_json(self, msg: Message) -> str:
         slave_msg_id = msg.uid
         slave_origin_uid = utils.chat_id_to_str(chat=msg.chat)
 
@@ -250,8 +250,7 @@ class SlaveMessageProcessor:
 
         chat_avatar = self.upload_bytes(self.get_chat_avatar(msg), msg.chat.name + ".png")
         sender_avatar = self.upload_bytes(self.get_sender_avatar(msg), msg.author.name + ".png")
-
-        return {
+        json_obj = {
             "contents": [content_obj],
             "profile": {
                 "name": msg.author.name,
@@ -270,6 +269,7 @@ class SlaveMessageProcessor:
             "slaveOriginUid": slave_origin_uid,
             "slaveMsgId": slave_msg_id,
         }
+        return json.dumps(json_obj)
 
     def get_fcm_content_obj(self, msg):
         if msg.type == MsgType.Text:
@@ -311,7 +311,7 @@ class SlaveMessageProcessor:
                 "url": res.get('url'),
                 "cloud_type": res.get('cloud_type'),
                 "cloud_id": res.get('cloud_id'),
-                "fileName": msg.filename,
+                "file_mame": msg.filename,
             }
         else:
             return {
@@ -319,7 +319,7 @@ class SlaveMessageProcessor:
                 "url": '',
                 "cloud_type": '',
                 "cloud_id": '',
-                "fileName": msg.filename,
+                "file_name": msg.filename,
             }
 
     def get_fcm_voice_content_obj(self, msg):

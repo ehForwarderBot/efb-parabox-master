@@ -24,8 +24,12 @@ class FCMUtil:
     def send(self, data: str):
         if self.app is None:
             self.init()
+        self.logger.debug('Sending FCM message: %s', data)
         message = messaging.Message(
-            data=data,
+            data={
+                "dto": data,
+                "type": "server"
+            },
             token=self.fcm_token,
         )
         response = messaging.send(message)
