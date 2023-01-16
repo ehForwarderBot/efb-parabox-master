@@ -34,3 +34,4 @@ class FCMUtil:
         )
         response = messaging.send(message)
         self.logger.log(99, 'Successfully sent message: %s', response)
+

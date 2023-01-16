@@ -31,6 +31,7 @@ from .slave_message import SlaveMessageProcessor
 from . import utils as epm_utils
 from .__version__ import __version__
 from .tencent_cos_util import TencentCosUtil
+from .xmpp import XmppServer
 
 
 class ParaboxChannel(MasterChannel):
@@ -78,6 +79,8 @@ class ParaboxChannel(MasterChannel):
         self.fcm_util: FCMUtil = FCMUtil(self)
         self.tencent_cos_util: TencentCosUtil = TencentCosUtil(self)
         self.qiniu_util: QiniuUtil = QiniuUtil(self)
+        if self.config.get("enable_fcm", False) is True:
+            self.xmpp_server: XmppServer = XmppServer(self)
 
         # Load predefined MIME types
         mimetypes.init(files=["mimetypes"])

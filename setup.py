@@ -43,7 +43,8 @@ setup(
         "typing",
         "cos-python-sdk-v5==1.9.22",
         "qiniu>=7.9.0",
-        "firebase_admin>=6.0.1"
+        "firebase_admin>=6.0.1",
+        "slixmpp>=1.8.2",
     ],
     entry_points={
         "ehforwarderbot.master": "ojhdt.parabox = efb_parabox_master:ParaboxChannel",
