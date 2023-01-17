@@ -45,6 +45,7 @@ setup(
         "qiniu>=7.9.0",
         "firebase_admin>=6.0.1",
         "slixmpp>=1.8.2",
+        "aioxmpp>=0.13.2",
     ],
     entry_points={
         "ehforwarderbot.master": "ojhdt.parabox = efb_parabox_master:ParaboxChannel",

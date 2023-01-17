@@ -1,4 +1,5 @@
 # coding=utf-8
+import asyncio
 import base64
 import io
 import logging
@@ -40,7 +41,8 @@ class SlaveMessageProcessor:
         if self.config.get("enable_fcm", False) is True:
             json_str = self.build_fcm_json(msg)
             self.logger.log(99, json_str)
-            self.channel.fcm_util.send(json_str)
+            # self.channel.fcm_util.send(json_str)
+            self.channel.xmpp_server.send(json_str)
             return msg
         else:
             json_str = self.build_json(msg)
