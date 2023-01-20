@@ -42,7 +42,7 @@ class SlaveMessageProcessor:
             json_str = self.build_fcm_json(msg)
             self.logger.log(99, json_str)
             # self.channel.fcm_util.send(json_str)
-            self.channel.xmpp_server.send(json_str)
+            self.channel.fcm_client.send(json_str)
             return msg
         else:
             json_str = self.build_json(msg)
@@ -278,16 +278,16 @@ class SlaveMessageProcessor:
             return self.get_text_content_obj(msg)
         elif msg.type == MsgType.Image:
             return self.get_fcm_image_content_obj(msg)
-        # elif msg.type == MsgType.Voice:
-        #     return self.get_fcm_voice_content_obj(msg)
-        # elif msg.type == MsgType.Audio:
-        #     return self.get_fcm_audio_content_obj(msg)
-        # elif msg.type == MsgType.File:
-        #     return self.get_fcm_file_content_obj(msg)
-        # elif msg.type == MsgType.Animation:
-        #     return self.get_fcm_animation_content_obj(msg)
-        # elif msg.type == MsgType.Video:
-        #     return self.get_fcm_video_content_obj(msg)
+        elif msg.type == MsgType.Voice:
+            return self.get_fcm_voice_content_obj(msg)
+        elif msg.type == MsgType.Audio:
+            return self.get_fcm_audio_content_obj(msg)
+        elif msg.type == MsgType.File:
+            return self.get_fcm_file_content_obj(msg)
+        elif msg.type == MsgType.Animation:
+            return self.get_fcm_animation_content_obj(msg)
+        elif msg.type == MsgType.Video:
+            return self.get_fcm_video_content_obj(msg)
         # elif msg.type == MsgType.Sticker:
         #     return self.get_fcm_sticker_content_obj(msg)
         # elif msg.type == MsgType.Location:
@@ -325,19 +325,109 @@ class SlaveMessageProcessor:
             }
 
     def get_fcm_voice_content_obj(self, msg):
-        pass
+        file = msg.file
+        file.seek(0)
+        res = self.upload_file(file, msg.filename)
+        if res is not None:
+            return {
+                "type": 3,
+                "url": res.get('url'),
+                "cloud_type": res.get('cloud_type'),
+                "cloud_id": res.get('cloud_id'),
+                "file_mame": msg.filename,
+            }
+        else:
+            return {
+                "type": 3,
+                "url": '',
+                "cloud_type": '',
+                "cloud_id": '',
+                "file_name": msg.filename,
+            }
 
     def get_fcm_audio_content_obj(self, msg):
-        pass
+        file = msg.file
+        file.seek(0)
+        res = self.upload_file(file, msg.filename)
+        if res is not None:
+            return {
+                "type": 3,
+                "url": res.get('url'),
+                "cloud_type": res.get('cloud_type'),
+                "cloud_id": res.get('cloud_id'),
+                "file_mame": msg.filename,
+            }
+        else:
+            return {
+                "type": 3,
+                "url": '',
+                "cloud_type": '',
+                "cloud_id": '',
+                "file_name": msg.filename,
+            }
 
     def get_fcm_file_content_obj(self, msg):
-        pass
+        file = msg.file
+        file.seek(0)
+        res = self.upload_file(file, msg.filename)
+        if res is not None:
+            return {
+                "type": 4,
+                "url": res.get('url'),
+                "cloud_type": res.get('cloud_type'),
+                "cloud_id": res.get('cloud_id'),
+                "file_mame": msg.filename,
+            }
+        else:
+            return {
+                "type": 4,
+                "url": '',
+                "cloud_type": '',
+                "cloud_id": '',
+                "file_name": msg.filename,
+            }
 
     def get_fcm_animation_content_obj(self, msg):
-        pass
+        file = msg.file
+        file.seek(0)
+        res = self.upload_file(file, msg.filename)
+        if res is not None:
+            return {
+                "type": 1,
+                "url": res.get('url'),
+                "cloud_type": res.get('cloud_type'),
+                "cloud_id": res.get('cloud_id'),
+                "file_mame": msg.filename,
+            }
+        else:
+            return {
+                "type": 1,
+                "url": '',
+                "cloud_type": '',
+                "cloud_id": '',
+                "file_name": msg.filename,
+            }
 
     def get_fcm_video_content_obj(self, msg):
-        pass
+        file = msg.file
+        file.seek(0)
+        res = self.upload_file(file, msg.filename)
+        if res is not None:
+            return {
+                "type": 6,
+                "url": res.get('url'),
+                "cloud_type": res.get('cloud_type'),
+                "cloud_id": res.get('cloud_id'),
+                "file_mame": msg.filename,
+            }
+        else:
+            return {
+                "type": 6,
+                "url": '',
+                "cloud_type": '',
+                "cloud_id": '',
+                "file_name": msg.filename,
+            }
 
     def upload_file(self, file, filename):
         if self.config.get('object_storage') is None:

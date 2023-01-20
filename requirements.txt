@@ -7,7 +7,3 @@ websockets~=10.4
 typing~=3.7.4.3
 cos-python-sdk-v5==1.9.22
 qiniu~=7.9.0
-firebase_admin~=6.0.1
-xmpppy~=0.7.1
-aioxmpp~=0.13.2
-slixmpp~=1.8.2

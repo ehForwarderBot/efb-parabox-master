@@ -23,7 +23,7 @@ from ruamel.yaml import YAML
 
 from .chat_object_cache import ChatObjectCacheManager
 from .db import DatabaseManager
-from .fcm_util import FCMUtil
+from .fcm_client import FcmClient
 from .master_message import MasterMessageProcessor
 from .qiniu_util import QiniuUtil
 from .server import ServerManager
@@ -31,7 +31,6 @@ from .slave_message import SlaveMessageProcessor
 from . import utils as epm_utils
 from .__version__ import __version__
 from .tencent_cos_util import TencentCosUtil
-from .xmpp import XmppServer
 
 
 class ParaboxChannel(MasterChannel):
@@ -75,13 +74,13 @@ class ParaboxChannel(MasterChannel):
         self.chat_manager: ChatObjectCacheManager = ChatObjectCacheManager(self)
         self.slave_messages: SlaveMessageProcessor = SlaveMessageProcessor(self)
         self.master_messages: MasterMessageProcessor = MasterMessageProcessor(self)
-        self.server_manager: ServerManager = ServerManager(self)
-        self.fcm_util: FCMUtil = FCMUtil(self)
         self.tencent_cos_util: TencentCosUtil = TencentCosUtil(self)
         self.qiniu_util: QiniuUtil = QiniuUtil(self)
-        if self.config.get("enable_fcm", False) is True:
-            self.xmpp_server: XmppServer = XmppServer(self)
 
+        if self.config.get("enable_fcm", False) is True:
+            self.fcm_client: FcmClient = FcmClient(self)
+        else:
+            self.server_manager: ServerManager = ServerManager(self)
         # Load predefined MIME types
         mimetypes.init(files=["mimetypes"])
 

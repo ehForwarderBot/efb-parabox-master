@@ -1,5 +1,6 @@
 
 import base64
+import json
 import logging
 import tempfile
 from typing import TYPE_CHECKING
@@ -46,20 +47,21 @@ class MasterMessageProcessor:
             self.logger.info("Processing refresh from Parabox.")
             self.channel.slave_messages.refresh_msg()
             # self.channel.server_manager.send_all_failed_msg()
+        elif json_obj['type'] == 'server':
+            self.logger.info("Processing message from FCM.")
+            self.process_parabox_server_message(json.loads(json_obj['data']))
         else:
             self.logger.warning("Unknown message type: %s", json_obj['type'])
 
     def process_parabox_message_message(self, param):
         data_path = efb_utils.get_data_path(self.channel.channel_id)
         destination = param['slaveOriginUid']
-        msg_id = param["slaveMsgId"]
         mtype = param['content']['type']
         channel, uid, gid = utils.chat_id_str_to_id(destination)
         if channel not in coordinator.slaves:
             return
         m = EPMMsg()
         try:
-            m.uid = MessageID(msg_id)
             m.type = get_msg_type(mtype)
             self.logger.debug("[%s] EFB message type: %s", m.uid, m.type)
             # Chat and author related stuff
@@ -144,6 +146,102 @@ class MasterMessageProcessor:
     def process_parabox_message_recall(self, param):
         pass
 
+    def process_parabox_server_message(self, param):
+        data_path = efb_utils.get_data_path(self.channel.channel_id)
+        destination = param['slaveOriginUid']
+        channel, uid, gid = utils.chat_id_str_to_id(destination)
+        if channel not in coordinator.slaves:
+            return
+        try:
+            for content in param['contents']:
+                mtype = content['type']
+                m = EPMMsg()
+                m.type = get_msg_type(mtype)
+                self.logger.debug("[%s] EFB message type: %s", m.uid, m.type)
+                # Chat and author related stuff
+                m.chat = self.chat_manager.get_chat(channel, uid, build_dummy=True)
+                if m.chat.has_self:
+                    m_author = SelfChatMember(m.chat)
+                else:
+                    m_author = m.chat.add_self()
+                m.author = m_author
+
+                m.deliver_to = coordinator.slaves[channel]
+
+                if m.type not in coordinator.slaves[channel].supported_message_types:
+                    self.logger.info("[%s] Message type %s is not supported by channel %s",
+                                     m.uid, m.type.name, channel)
+                    raise EFBMessageTypeNotSupported(
+                        "{type_name} messages are not supported by slave channel {channel_name}.")
+
+                if mtype == 0:
+                    m.text = content['text']
+                elif mtype == 1:
+                    file_name = content['file_name']
+                    f = tempfile.NamedTemporaryFile(suffix=".jpg")
+                    f.write(self.download_file(content['cloud_type'], content['cloud_id']).read())
+                    f.seek(0)
+                    m.file = f
+                    m.filename = file_name
+                    m.mime = "image/jpeg"
+                elif mtype == 2:
+                    file_name = content['file_name']
+                    f = tempfile.NamedTemporaryFile(suffix=".mp3")
+                    f.write(self.download_file(content['cloud_type'], content['cloud_id']).read())
+                    f.seek(0)
+                    m.file = f
+                    m.filename = file_name
+                    m.mime = "audio/mpeg"
+                elif mtype == 3:
+                    file_name = content['file_name']
+                    f = tempfile.NamedTemporaryFile(suffix=".mpeg")
+                    f.write(self.download_file(content['cloud_type'], content['cloud_id']).read())
+                    f.seek(0)
+                    m.file = f
+                    m.filename = file_name
+                    m.mime = "video/mpeg"
+                elif mtype == 4:
+                    file_name = content['file_name']
+                    f = tempfile.NamedTemporaryFile()
+                    f.name = file_name
+                    f.write(self.download_file(content['cloud_type'], content['cloud_id']).read())
+                    f.seek(0)
+                    m.file = f
+                    m.filename = file_name
+                    m.mime = "application/octet-stream"
+
+                elif mtype == 5:
+                    file_name = content['fileName']
+                    f = tempfile.NamedTemporaryFile(suffix=".gif")
+                    f.write(self.download_file(content['cloud_type'], content['cloud_id']).read())
+                    f.seek(0)
+                    m.file = f
+                    m.filename = file_name
+                    m.mime = "image/gif"
+
+                slave_msg = coordinator.send_message(m)
+                if slave_msg and slave_msg.uid:
+                    m.uid = slave_msg.uid
+                else:
+                    m.uid = None
+        except EFBChatNotFound as e:
+            self.logger.exception("Chat is not found.. (exception: %s)", e)
+        except EFBMessageTypeNotSupported as e:
+            self.logger.exception("Message type is not supported... (exception: %s)", e)
+        except EFBOperationNotSupported as e:
+            self.logger.exception("Message editing is not supported.. (exception: %s)", e)
+        except EFBException as e:
+            self.logger.exception("Message is not sent. (exception: %s)", e)
+        except Exception as e:
+            self.logger.exception("Message is not sent. (exception: %s)", e)
+        finally:
+            pass
+
+    def download_file(self, cloud_type, cloud_id):
+        if cloud_type == 2:
+            return self.channel.tencent_cos_util.download_file(cloud_id)
+        elif cloud_type == 3:
+            return self.channel.qiniu_util.download_file(cloud_id)
 
 def get_msg_type(msg_type: int) -> MsgType:
     if msg_type == 0:

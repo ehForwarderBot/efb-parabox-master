@@ -1,4 +1,5 @@
 import io
+import tempfile
 from typing import TYPE_CHECKING
 
 from qcloud_cos import CosConfig
@@ -80,4 +81,4 @@ class TencentCosUtil:
             Bucket=self.bucket,
             Key=key,
         )
-        return download_response.get('Body').get_raw_stream()
+        return download_response['Body']
