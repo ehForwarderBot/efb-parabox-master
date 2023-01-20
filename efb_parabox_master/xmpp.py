@@ -31,8 +31,6 @@
 #         self.channel = channel
 #         self.config = channel.config
 #         self.logger = channel.logger
-#         self.authorization_file_path = self.config.get('authorization_file_path')
-#         path = efb_utils.get_data_path(self.channel.channel_id) / self.authorization_file_path
 #         cred = credentials.Certificate(path)
 #         cred.get_access_token()
 #

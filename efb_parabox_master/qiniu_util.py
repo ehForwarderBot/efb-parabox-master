@@ -1,4 +1,6 @@
 from typing import TYPE_CHECKING
+
+import requests
 from qiniu import Auth, put_file, etag, BucketManager, put_data
 import qiniu.config
 
@@ -31,7 +33,7 @@ class QiniuUtil:
         ret, info = put_file(token, key, file.name)
         if ret['key'] is not None:
             return {
-                'url': self.domain + ret['key'],
+                'url': 'http://%s/%s' % (self.domain, ret['key']),
                 'cloud_type': 3,
                 'cloud_id': ret['key'],
             }
@@ -42,9 +44,10 @@ class QiniuUtil:
         self.init()
 
         q = Auth(self.access_key, self.secret_key)
-        bucket = BucketManager(q)
-        ret, info = bucket.fetch(self.domain + key, self.bucket, key)
-        return ret['data']
+        base_url = 'http://%s/%s' % (self.domain, key)
+        private_url = q.private_download_url(base_url, expires=3600)
+        r = requests.get(private_url)
+        return r.content
 
     def upload_bytes(self, file_bytes, filename):
         self.init()

@@ -25,11 +25,7 @@
 #         self.channel = channel
 #         self.config = channel.config
 #         self.logger = channel.logger
-#         self.authorization_file_path = self.config.get('authorization_file_path')
-#         path = efb_utils.get_data_path(self.channel.channel_id) / self.authorization_file_path
 #         cred = credentials.Certificate(path)
-#         user = "292416108654@fcm.googleapis.com"
-#         password = "a8a46616c6b56db6d4169e617e74ab5824497a5b"
 #         asyncio.set_event_loop(asyncio.new_event_loop())
 #
 #         self.xmpp = GCM(user, password, self.logger)

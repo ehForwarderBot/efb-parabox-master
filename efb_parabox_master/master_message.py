@@ -179,7 +179,7 @@ class MasterMessageProcessor:
                 elif mtype == 1:
                     file_name = content['file_name']
                     f = tempfile.NamedTemporaryFile(suffix=".jpg")
-                    f.write(self.download_file(content['cloud_type'], content['cloud_id']).read())
+                    f.write(self.download_file(content['cloud_type'], content['cloud_id']))
                     f.seek(0)
                     m.file = f
                     m.filename = file_name
@@ -187,7 +187,7 @@ class MasterMessageProcessor:
                 elif mtype == 2:
                     file_name = content['file_name']
                     f = tempfile.NamedTemporaryFile(suffix=".mp3")
-                    f.write(self.download_file(content['cloud_type'], content['cloud_id']).read())
+                    f.write(self.download_file(content['cloud_type'], content['cloud_id']))
                     f.seek(0)
                     m.file = f
                     m.filename = file_name
@@ -195,7 +195,7 @@ class MasterMessageProcessor:
                 elif mtype == 3:
                     file_name = content['file_name']
                     f = tempfile.NamedTemporaryFile(suffix=".mpeg")
-                    f.write(self.download_file(content['cloud_type'], content['cloud_id']).read())
+                    f.write(self.download_file(content['cloud_type'], content['cloud_id']))
                     f.seek(0)
                     m.file = f
                     m.filename = file_name
@@ -204,7 +204,7 @@ class MasterMessageProcessor:
                     file_name = content['file_name']
                     f = tempfile.NamedTemporaryFile()
                     f.name = file_name
-                    f.write(self.download_file(content['cloud_type'], content['cloud_id']).read())
+                    f.write(self.download_file(content['cloud_type'], content['cloud_id']))
                     f.seek(0)
                     m.file = f
                     m.filename = file_name
@@ -213,7 +213,7 @@ class MasterMessageProcessor:
                 elif mtype == 5:
                     file_name = content['fileName']
                     f = tempfile.NamedTemporaryFile(suffix=".gif")
-                    f.write(self.download_file(content['cloud_type'], content['cloud_id']).read())
+                    f.write(self.download_file(content['cloud_type'], content['cloud_id']))
                     f.seek(0)
                     m.file = f
                     m.filename = file_name

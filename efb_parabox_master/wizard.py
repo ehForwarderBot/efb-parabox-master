@@ -123,8 +123,6 @@ class DataModel:
                     "#  domain: your_custom_domain\n"
                     "#\n"
                 )
-                f.write("\n")
-                self.yaml.dump({"authorization_file_path": 'service-account.json'}, f)
             with self.config_path.open() as f:
                 self.data = self.yaml.load(f)
             self.building_default = False

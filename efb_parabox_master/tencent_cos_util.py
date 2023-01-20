@@ -81,4 +81,4 @@ class TencentCosUtil:
             Bucket=self.bucket,
             Key=key,
         )
-        return download_response['Body']
+        return download_response['Body'].get_raw_stream().read()
