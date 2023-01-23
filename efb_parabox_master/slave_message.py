@@ -313,7 +313,7 @@ class SlaveMessageProcessor:
                 "url": res.get('url'),
                 "cloud_type": res.get('cloud_type'),
                 "cloud_id": res.get('cloud_id'),
-                "file_mame": msg.filename,
+                "file_name": msg.filename,
             }
         else:
             return {
@@ -334,7 +334,7 @@ class SlaveMessageProcessor:
                 "url": res.get('url'),
                 "cloud_type": res.get('cloud_type'),
                 "cloud_id": res.get('cloud_id'),
-                "file_mame": msg.filename,
+                "file_name": msg.filename,
             }
         else:
             return {
@@ -355,7 +355,7 @@ class SlaveMessageProcessor:
                 "url": res.get('url'),
                 "cloud_type": res.get('cloud_type'),
                 "cloud_id": res.get('cloud_id'),
-                "file_mame": msg.filename,
+                "file_name": msg.filename,
             }
         else:
             return {
@@ -376,7 +376,7 @@ class SlaveMessageProcessor:
                 "url": res.get('url'),
                 "cloud_type": res.get('cloud_type'),
                 "cloud_id": res.get('cloud_id'),
-                "file_mame": msg.filename,
+                "file_name": msg.filename,
             }
         else:
             return {
@@ -397,7 +397,7 @@ class SlaveMessageProcessor:
                 "url": res.get('url'),
                 "cloud_type": res.get('cloud_type'),
                 "cloud_id": res.get('cloud_id'),
-                "file_mame": msg.filename,
+                "file_name": msg.filename,
             }
         else:
             return {
@@ -418,7 +418,7 @@ class SlaveMessageProcessor:
                 "url": res.get('url'),
                 "cloud_type": res.get('cloud_type'),
                 "cloud_id": res.get('cloud_id'),
-                "file_mame": msg.filename,
+                "file_name": msg.filename,
             }
         else:
             return {
