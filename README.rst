@@ -104,6 +104,40 @@ EPM 是一个用于 EH Forwarder Bot 的 Parabox 主端。需结合 Parabox WS �
 
     compatibility_mode: true
 
+    #
+    # Experimental Options
+    # --------------
+    #
+    enable_fcm: false
+
+    fcm_token: device_fcm_token
+
+    object_storage:
+      #  type: tencent_cos
+      #  secret_id: your_permanent_secret_id
+      #  secret_key: your_permanent_secret_key
+      #  bucket: examplebucket-1250000000
+      #  region: ap-guangzhou
+      #
+      #  type: qiniu
+      #  access_key: your_permanent_access_key
+      #  secret_key: your_permanent_secret_key
+      #  bucket: your_bucket_name
+      #  domain: your_bucket_domain
+      #
+
+
+有关 FCM 模式（实验性）的说明
+=========
+该模式为实验性工作模式，默认禁用。需手动修改配置文件（ ``enable_fcm`` ）启用。启用后，常规模式下的配置项将失效（主机，端口，密钥等）。你还需提供从 Parabox 中获取的 FCM token。建议同步运行 Parabox 中 ``配置FCM连接`` 向导，该向导将指引你完成有关配置步骤。
+
+由于 FCM 仅允许传输文本，图片/语音/文件等消息类型无法正常传输，需自行配置对象存储。目前仅支持腾讯云/七牛云。若需启用，请删除 ``object_storage``配置项下对应对象存储服务的 ``#`` 注释，并按提示填充配置项。请注意，Parabox 中配置的对象存储服务需与本主端保持一致。
+
+FCM 传输限额为 4000 条/小时/设备。
+
+受 FCM 机制限制，所有消息皆须经过 Parabox 公共消息中转服务器（api.parabox.ojhdt.dev）中转。该过程不会记录您的任何聊天数据。
+
+若本主端与中转服务器断开后重连，目前已建立对话的发送信道都将失效（将无法正常发送消息）。仅需使对话再接收至少一条消息即可刷新发送信道。
 
 
 已知问题
@@ -111,9 +145,5 @@ EPM 是一个用于 EH Forwarder Bot 的 Parabox 主端。需结合 Parabox WS �
 
 以下问题为在测试中发现，并可能于后续版本修复的问题：
 
-* 高频率发送 ``图片`` 将导致部分图片丢失。
-
 * 发送过大的 ``图片`` / ``文件`` 时可能会失败。
-
-* 偶发性的无故断连，可尝试使用 ws 扩展的 ``自动重连`` 功能临时解决。
 

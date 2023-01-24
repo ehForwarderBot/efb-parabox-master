@@ -1,4 +1,6 @@
 import sys
+from pathlib import Path
+
 from setuptools import setup, find_packages
 
 if sys.version_info < (3, 6):
@@ -6,12 +8,16 @@ if sys.version_info < (3, 6):
 
 __version__ = ""
 exec(open("efb_parabox_master/__version__.py").read())
+this_directory = Path(__file__).parent
+long_description = (this_directory / "README.rst").read_text()
 
 setup(
     name='efb_parabox_master',
     packages=find_packages(exclude=["*.tests", "*.tests.*", "tests.*", "tests"]),
     version=__version__,
     description='Parabox Master Channel for EH Forwarder Bot.',
+    long_description=long_description,
+    long_description_content_type='text/x-rst',
     author='Ojhdt',
     license='AGPLv3+',
     include_package_data=True,
